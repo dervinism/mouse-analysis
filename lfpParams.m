@@ -1,0 +1,12 @@
+dssrLFPinit = 1000; % initial down-sampled LFP sampling rate.
+dssrLFPfinal = 10; % final down-sampled LFP sampling rate.
+chunkSize = 4500000;
+bandNames = {'delta'; 'alpha'; 'h theta'; 'theta'; 'spindles'; 'slow'; 'beta'; 's gamma'; 'f gamma'; 'ripples/uf'};
+LFPbands  = { [1 4];   [4 8];    [5 9];    [8 12];  [6.5 16];  [1 16]; [12 30]; [30 50];   [50 120];   [120 200]};
+chOI = {20; 75; 123; []; [187 194]; 256; []; [316 330 358 377]}; % channels of interest for each DB entry
+rippleDuration = 0.05; % s
+sdGaussian = 1.5; % s
+wGaussian = 6; % SD
+subtractMedian = false;
+deleteChans = [];
+intermediateSaving = false;
