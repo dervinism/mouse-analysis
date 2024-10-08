@@ -4,6 +4,7 @@
 uolSourceDirNeuronexus = 'S:\cortical_dynamics\Shared\CSN\Shared'; %'R:\CSN\Shared\Dynamics\Data';
 uolSourceDirNeuropixels = 'S:\cortical_dynamics\Shared\CSN\Shared'; %'R:\Neuropix\Shared\Data';
 allensdkSourceDir = 'E:\res\allensdk'; %'R:\Neuropix\Shared\Data\allensdk';
+iblSourceDir = 'C:\Users\44079\data_repositories\ibl-eightprobes';
 dataDir = 'D:\mouse_analysis_data'; 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data';
 paDir = 'area_properties';
 paDir_positive = 'area_properties_positive';

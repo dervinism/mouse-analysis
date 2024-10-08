@@ -1,22 +1,19 @@
 % Creates a database for a recording session.
 
 % Set the folder containing all of your animal recording data (top directory)
-if ispc && ~isempty(dir('R:\'))
-  topDir = uolSourceDirNeuropixels;
-  %topDir = allensdkSourceDir;
-elseif ispc && isempty(dir('R:\'))
-  error('Could not find R: drive on your system')
-else
-  error('Make sure to set up topDir containing recording data')
-end
+%topDir = uolSourceDirNeuropixels;
+%topDir = allensdkSourceDir;
+topDir = iblSourceDir;
 
 % Animal's name or id
 animal = 'M191106_MD';
 
 if contains(topDir, 'allensdk')
   repository = 'allensdk';
-else
+elseif contains(topDir, 'uol')
   repository = 'uol';
+elseif contains(topDir, 'ibl')
+  repository = 'ibl';
 end
 
 researcher = 'MD';
@@ -35,7 +32,7 @@ if strcmp(repository, 'allensdk')
   chOI = cellOfMatrices(1:384, nSeries, 1); % channels of interest
   period = cellOfMatrices([0 99999], nSeries, 1); % spiking time period
   periodLFP = cellOfMatrices([0 99999], nSeries, 1); % LFP time period
-else
+elseif strcmp(repository, 'uol')
   srRecording = 3e4;
   srRecordingLFP = 2500;
   shanks = ones(1,8);
@@ -46,6 +43,8 @@ else
   chOI = {1:30; 31:98; 99:138; 1:138; 139:220; 221:306; 139:306; 307:384};
   period = {[0 99999];[0 99999];[0 99999];[0 99999];[0 99999];[0 99999];[0 99999];[0 99999]};
   periodLFP = period;
+elseif strcmp(repository, 'ibl')
+  
 end
 
 if strcmp(repository, 'allensdk')

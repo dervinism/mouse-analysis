@@ -3,7 +3,7 @@
 % were replaced by analyses scripts written subsequently.
 
 cleanUp
-parpool(24); % This line should be commented out if not running on NSG Portal
+%parpool(32); % This line should be commented out if not running on NSG Portal
 
 
 dataFile = 'M191106_MD.mat';
@@ -15,10 +15,10 @@ dbEntries_ca = inf;
 params
 lists
 addDependencies
-downsamplingConv
-% makedb_new
-% AnPSD_load
-% AnPSD_load_waveforms
+%downsamplingConv
+makedb_new
+AnPSD_load
+AnPSD_load_waveforms
 % eyeLoad
 % eyeLoad_filter
 % motionLoad
