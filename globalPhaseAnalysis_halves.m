@@ -30,32 +30,37 @@ if ~exist('reverse', 'var')
   reverse = false;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep caDir filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep caDir_positive filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep caDir_negative filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_negative filesep PRsFolder];
   end
   animals = animalsOI;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep caDir_uol filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_uol filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep caDir_uol_positive filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_uol_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep caDir_uol_negative filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_uol_negative filesep PRsFolder];
   end
   animals = animalsUOLOI;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep caDir_allensdk filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_allensdk filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep caDir_allensdk_positive filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_allensdk_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep caDir_allensdk_negative filesep PRsFolder];
+    rootFolder = [outputDir filesep caDir_allensdk_negative filesep PRsFolder];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};

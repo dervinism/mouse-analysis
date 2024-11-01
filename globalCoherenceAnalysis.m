@@ -18,43 +18,48 @@ if ~exist('qualityCheck', 'var')
   qualityCheck = false;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir];
-    rootFolder_ca = [dataDir filesep caDir];
+    rootFolder = [outputDir filesep laDir];
+    rootFolder_ca = [outputDir filesep caDir];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_positive];
-    rootFolder_ca = [dataDir filesep caDir_positive];
+    rootFolder = [outputDir filesep laDir_positive];
+    rootFolder_ca = [outputDir filesep caDir_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_negative];
-    rootFolder_ca = [dataDir filesep caDir_negative];
+    rootFolder = [outputDir filesep laDir_negative];
+    rootFolder_ca = [outputDir filesep caDir_negative];
   end
   animals = animalsOI;
   xLim = [FOI(end) FOI(1)];
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_uol];
-    rootFolder_ca = [dataDir filesep caDir_uol];
+    rootFolder = [outputDir filesep laDir_uol];
+    rootFolder_ca = [outputDir filesep caDir_uol];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_uol_positive];
-    rootFolder_ca = [dataDir filesep caDir_uol_positive];
+    rootFolder = [outputDir filesep laDir_uol_positive];
+    rootFolder_ca = [outputDir filesep caDir_uol_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_uol_negative];
-    rootFolder_ca = [dataDir filesep caDir_uol_negative];
+    rootFolder = [outputDir filesep laDir_uol_negative];
+    rootFolder_ca = [outputDir filesep caDir_uol_negative];
   end
   animals = animalsUOLOI;
   xLim = [FOI(end) FOI(1)];
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_allensdk];
-    rootFolder_ca = [dataDir filesep caDir_allensdk];
+    rootFolder = [outputDir filesep laDir_allensdk];
+    rootFolder_ca = [outputDir filesep caDir_allensdk];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_allensdk_positive];
-    rootFolder_ca = [dataDir filesep caDir_allensdk_positive];
+    rootFolder = [outputDir filesep laDir_allensdk_positive];
+    rootFolder_ca = [outputDir filesep caDir_allensdk_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_allensdk_negative];
-    rootFolder_ca = [dataDir filesep caDir_allensdk_negative];
+    rootFolder = [outputDir filesep laDir_allensdk_negative];
+    rootFolder_ca = [outputDir filesep caDir_allensdk_negative];
   end
   animals = animalsAllensdk;
   xLim = [0.045 FOI(1)];

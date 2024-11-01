@@ -14,34 +14,39 @@ if ~exist('fullRun', 'var')
   fullRun = true;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    mainFolder = [dataDir filesep area2pupilDir filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    mainFolder = [dataDir filesep area2pupilDir_positive filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    mainFolder = [dataDir filesep area2pupilDir_negative filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_negative filesep PRsFolder];
   end
   animals = animalsOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    mainFolder = [dataDir filesep area2pupilDir_uol filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_uol filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    mainFolder = [dataDir filesep area2pupilDir_uol_positive filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_uol_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    mainFolder = [dataDir filesep area2pupilDir_uol_negative filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_uol_negative filesep PRsFolder];
   end
   animals = animalsUOLOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    mainFolder = [dataDir filesep area2pupilDir_allensdk filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_allensdk filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    mainFolder = [dataDir filesep area2pupilDir_allensdk_positive filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_allensdk_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    mainFolder = [dataDir filesep area2pupilDir_allensdk_negative filesep PRsFolder];
+    mainFolder = [outputDir filesep area2pupilDir_allensdk_negative filesep PRsFolder];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};

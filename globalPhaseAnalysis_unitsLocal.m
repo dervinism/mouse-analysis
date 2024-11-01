@@ -30,7 +30,7 @@ if ~exist('subpop', 'var')
   subpop = 'all';
 end
 if ~exist('fullRun', 'var')
-  fullRun = true;
+  fullRun = false;
 end
 if ~exist('qualityCheck', 'var')
   qualityCheck = false;
@@ -41,34 +41,39 @@ else
   fRef = 0.03;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir];
+    rootFolder = [outputDir filesep laDir];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_positive];
+    rootFolder = [outputDir filesep laDir_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_negative];
+    rootFolder = [outputDir filesep laDir_negative];
   end
   animals = animalsOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_uol];
+    rootFolder = [outputDir filesep laDir_uol];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_uol_positive];
+    rootFolder = [outputDir filesep laDir_uol_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_uol_negative];
+    rootFolder = [outputDir filesep laDir_uol_negative];
   end
   animals = animalsUOLOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_allensdk];
+    rootFolder = [outputDir filesep laDir_allensdk];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_allensdk_positive];
+    rootFolder = [outputDir filesep laDir_allensdk_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_allensdk_negative];
+    rootFolder = [outputDir filesep laDir_allensdk_negative];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};
@@ -112,7 +117,7 @@ if fullRun
         continue
       end
     end
-    
+
     % Initialise variables
     try
       if strcmp(subpop, 'all')
@@ -205,13 +210,13 @@ if fullRun
         areaAutoCorrsIndividual{iCond} = areaAutoCorrsIndividualCond;
       end
     end
-    
+
     for dbCount = 1:numel(fnsData) % Loop through db entries
       dbStruct = dataStruct.seriesData.(fnsData{dbCount});
       if isempty(dbStruct)
         continue
       end
-            
+
       % Determine if series phase and coherence data exist
       if exist('seriesName', 'var')
         prevRec = seriesName(1:min([14 numel(seriesName)]));
@@ -223,17 +228,17 @@ if fullRun
       if ~isfield(dbStruct, 'popData') || ~isfield(dbStruct.popData, 'phaseCoh') || isempty(dbStruct.popData.phaseCoh)
         continue
       end
-      
+
       % Test for exceptions
       if exceptionTest(except, seriesName)
         continue
       end
-      
+
       % Determine if population rate > 0
       if firingRateTest(sum(dbStruct.popData.MUAsAll,1), srData)
         continue
       end
-      
+
       % Determine recording area
       if strcmp(repository,'all')
         error('Only allensdk and uol repositories are supported currently.');
@@ -242,20 +247,20 @@ if fullRun
       elseif strcmp(repository,'allensdk')
         area = determineArea(seriesName);
       end
-      
+
       % Determine recording condition (i.e., awake or anaesthesia)
       [breakClause, iCond] = series2condition(awake, anaesthesia, seriesName);
       if breakClause
         continue
       end
-      
+
       % Determine mode boundaries
       if strcmpi(repository, 'uol')
         modeBoundaries = phaseHistoBinCentres(modesUOL{area(1)});
       elseif strcmpi(repository, 'allensdk')
         modeBoundaries = phaseHistoBinCentres(modesAllensdk{area(1)});
       end
-      
+
       % Disqualify low quality units if needed
       units = [];
       if (strcmpi(subpop, 'positive') || strcmpi(subpop, 'negative')) &&...
@@ -320,7 +325,7 @@ if fullRun
       if isempty(qualityUnitInd)
         continue
       end
-      
+
       for iAreaPlusAll = area % Loop through the main and pooled areas
         if numel(conditions) > 1
           condLoop = [iCond numel(conditions)];
@@ -328,7 +333,7 @@ if fullRun
           condLoop = iCond;
         end
         for iCondPlusAll = condLoop % Loop through the main and pooled conditions
-          
+
           % Load and store phase and coherence data for units
           spk = [];
           shankIDs = fieldnames(dbStruct.shankData);
@@ -344,9 +349,9 @@ if fullRun
               if isempty(iU)
                 continue
               end
-              
+
               freq = shankStruct.phaseCoh{iU}.freq;  
-              
+
               % Get phase and coherence values
               if isfield(shankStruct.phaseCoh{iU}, 'coh')
                 coh = shankStruct.phaseCoh{iU}.coh;
@@ -359,7 +364,7 @@ if fullRun
                   phaseConfU, phaseConfL, coh, cohConf, rateadjust_kappa);
 %                 [~, phaseConfU, phaseConfL, coh, cohConfU, cohConfL] = correctPhaseCoh(phase,...
 %                   phaseConfU, phaseConfL, coh, cohConf, rateadjust_kappa);
-                
+
                 % Obtain and store phase and coherence values for FOI
                 if sum(~isnan(phase)) && sum(~isnan(coh))
                   [phaseFOI, cohFOI] = phaseCohFOI(FOI, freq, phase, coh, [cohConfU; cohConfL]);
@@ -367,7 +372,7 @@ if fullRun
                   phaseFOI = NaN(size(FOI));
                   cohFOI = NaN(size(FOI));
                 end
-                
+
                 % Store values
                 areaCohFOIindividual{iCondPlusAll}{iAreaPlusAll} = [areaCohFOIindividual{iCondPlusAll}{iAreaPlusAll}; cohFOI];
                 areaPhaseFOIindividual{iCondPlusAll}{iAreaPlusAll} = [areaPhaseFOIindividual{iCondPlusAll}{iAreaPlusAll}; phaseFOI];
@@ -390,7 +395,7 @@ if fullRun
               areaFreqFullIndividual{iCondPlusAll}{iAreaPlusAll}{numel(areaFreqFullIndividual{iCondPlusAll}{iAreaPlusAll})+1} = freq;
             end
           end
-          
+
           % Calculate and store autocorrelations
           for u = 1:numel(qualityUnitInd)
             [xc,lags] = xcorr(full(spk(qualityUnitInd(u),:)),'coeff');
@@ -403,7 +408,7 @@ if fullRun
     end
   end
   lags = (1:acgdPeriod*srData).*(1/srData);
-  
+
   % Interpolate and store full phases and coherences
   freqCombined = FOI;
   for iCond = 1:numel(conditions)

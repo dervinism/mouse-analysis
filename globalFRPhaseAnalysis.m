@@ -23,38 +23,43 @@ else
   fRef = 0.03;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir];
-    rootFolderPositive = [dataDir filesep laDir_positive];
-    rootFolderNegative = [dataDir filesep laDir_negative];
+    rootFolder = [outputDir filesep laDir];
+    rootFolderPositive = [outputDir filesep laDir_positive];
+    rootFolderNegative = [outputDir filesep laDir_negative];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_positive];
+    rootFolder = [outputDir filesep laDir_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_negative];
+    rootFolder = [outputDir filesep laDir_negative];
   end
   animals = animalsOI;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_uol];
-    rootFolderPositive = [dataDir filesep laDir_uol_positive];
-    rootFolderNegative = [dataDir filesep laDir_uol_negative];
+    rootFolder = [outputDir filesep laDir_uol];
+    rootFolderPositive = [outputDir filesep laDir_uol_positive];
+    rootFolderNegative = [outputDir filesep laDir_uol_negative];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_uol_positive];
+    rootFolder = [outputDir filesep laDir_uol_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_uol_negative];
+    rootFolder = [outputDir filesep laDir_uol_negative];
   end
   animals = animalsUOLOI;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_allensdk];
-    rootFolderPositive = [dataDir filesep laDir_allensdk_positive];
-    rootFolderNegative = [dataDir filesep laDir_allensdk_negative];
+    rootFolder = [outputDir filesep laDir_allensdk];
+    rootFolderPositive = [outputDir filesep laDir_allensdk_positive];
+    rootFolderNegative = [outputDir filesep laDir_allensdk_negative];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_allensdk_positive];
+    rootFolder = [outputDir filesep laDir_allensdk_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_allensdk_negative];
+    rootFolder = [outputDir filesep laDir_allensdk_negative];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};
@@ -141,7 +146,7 @@ if fullRun
       load([dataDir filesep animals{animal} filesep animals{animal} '.mat'])
     end
     fnsData = fieldnames(dataStruct.seriesData);
-    
+
     % Initialise variables
     srData = dataStruct.seriesData.(fnsData{1}).conf.samplingParams.srData;
     if animal == 1 || ~exist('areaFRPercentileIndividual_50', 'var')
@@ -354,15 +359,18 @@ if fullRun
         areaFRFiltBP0p1to0p5HzIndividual_piOver16Shifted{iCond} = areaFRFiltBP0p1to0p5HzIndividual_piOver16ShiftedCond;
       end
     end
-    
+
     for dbCount = 1:numel(fnsData) % Loop through db entries
+      if dbCount == 49
+        pause(1);
+      end
       dbStruct = dataStruct.seriesData.(fnsData{dbCount});
       if isempty(dbStruct)
         continue
       end
       seriesName = seriesFromEntry(fnsData{dbCount});
       disp(['             series ' seriesName]);
-      
+
       % Determine if series pupil data exist
       if isempty(dbStruct.popData)
         continue
@@ -373,19 +381,19 @@ if fullRun
       if isempty(dbStruct.popData.pupil.popData) || isempty(dbStruct.popData.pupil.popData.phase)
         continue
       end
-      
+
       % Test for exceptions
       if exclude && exceptionTest(except, seriesName)
         continue
       elseif ~exclude && exceptionTest(exceptFR, seriesName)
         continue
       end
-      
+
       % Determine if population rate > 0
       if firingRateTest(sum(dbStruct.popData.MUAsAll,1), dbStruct.conf.samplingParams.srData)
         continue
       end
-      
+
       % Determine recording area
       if strcmp(repository,'all')
         error('Only allensdk and uol repositories are supported currently.');
@@ -394,20 +402,20 @@ if fullRun
       elseif strcmp(repository,'allensdk')
         area = determineArea(seriesName);
       end
-      
+
       % Determine recording condition (i.e., awake or anaesthesia)
       [breakClause, iCond] = series2condition(awake, anaesthesia, seriesName);
       if breakClause
         continue
       end
-      
+
       % Determine mode boundaries
       if strcmpi(repository, 'uol')
         modeBoundaries = phaseHistoBinCentres(modesUOL{area(1)});
       elseif strcmpi(repository, 'allensdk')
         modeBoundaries = phaseHistoBinCentres(modesAllensdk{area(1)});
       end
-      
+
       % Disqualify low quality units if needed
       units = [];
       if ~isfield(dbStruct.shankData.(['shank' num2str(1)]), 'pupil')
@@ -455,7 +463,8 @@ if fullRun
               phaseSignificant = [phaseSignificant; ~isnan(spkPhaseSignificant(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)')];
             end
           elseif iCond == 2
-            if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'rSpearman')
+            if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'rSpearman') || ...
+                isempty(dbStruct.shankData.(['shank' num2str(sh)]).rSpearman)
               continue
             else
               rSpearman = [rSpearman; dbStruct.shankData.(['shank' num2str(sh)]).rSpearman'];
@@ -514,7 +523,7 @@ if fullRun
       if isempty(qualityUnitInd)
         continue
       end
-      
+
       if numel(conditions) > 1
         condLoop = [iCond numel(conditions)];
       else
@@ -523,7 +532,7 @@ if fullRun
       for iCondPlusAll = condLoop % Loop through the main and pooled conditions
         for iAreaPlusAll = area % Loop through the main and pooled areas
           close all
-          
+
           % Get unit spiking pupil correlation data
           shankIDs = fieldnames(dbStruct.shankData);
           spk = [];
@@ -572,24 +581,27 @@ if fullRun
               end
             end
           end
+          if isempty(rSpearman)
+            continue
+          end
           arearSpearman5secIndividual{iCondPlusAll}{iAreaPlusAll} = [arearSpearman5secIndividual{iCondPlusAll}{iAreaPlusAll}; torow(rSpearman(qualityUnitInd))'];
           areapvalSpearman5secIndividual{iCondPlusAll}{iAreaPlusAll} = [areapvalSpearman5secIndividual{iCondPlusAll}{iAreaPlusAll}; torow(pvalSpearman(qualityUnitInd))'];
           [recIDs{1:numel(rSpearman(qualityUnitInd))}] = deal(fnsData{dbCount});
           areaRecIDSpearman5secIndividual{iCondPlusAll}{iAreaPlusAll} = [areaRecIDSpearman5secIndividual{iCondPlusAll}{iAreaPlusAll}; recIDs'];
           period = dbStruct.db(dbCount).period;
-          
+
           % Get eye data
           eyeData = dataStruct.eyeData.([animals{animal} '_s' seriesName(1:min([14 numel(seriesName)]))]);
           eyeData.pupilArea = double(eyeData.pupilAreaFilt.pupilAreaFiltHP0p01Hz);
           eyeData.frameTimes = eyeData.pupilAreaFilt.timesFiltStart:eyeData.pupilAreaFilt.timesFiltStep:eyeData.pupilAreaFilt.timesFiltStop;
-          
+
           % Combine periods
           if exclude || (~exclude && ismember(animals{animal},animalsNeuronexusUOL))
             commonPeriod = combinePeriods(period, eyeData.period, srData);
           else
             commonPeriod = combinePeriods(eyeData.period, eyeData.period, srData);
           end
-          
+
           % Interpolate and filter pupil area data
           if isempty(commonPeriod)
             continue
@@ -626,36 +638,36 @@ if fullRun
           pupilAreaFiltBP0p1to0p5Hz = interp1(pupilAreaFiltTimes, eyeData.pupilAreaFilt.pupilAreaFiltBP0p1to0p5Hz, interpTimes);
           phaseFiltBP0p01to0p05Hz = interp1(pupilAreaFiltTimes, eyeData.pupilAreaFilt.phaseFiltBP0p01to0p05Hz, interpTimes);
           phaseFiltBP0p1to0p5Hz = interp1(pupilAreaFiltTimes, eyeData.pupilAreaFilt.phaseFiltBP0p1to0p5Hz, interpTimes);
-          
+
           % Truncate spiking data
           spk = spk(:, interpInds);
-          
+
           % Calculate firing rates
           % Full rates
           areaFRIndividual{iCondPlusAll}{iAreaPlusAll} = [areaFRIndividual{iCondPlusAll}{iAreaPlusAll}; (sum(spk(qualityUnitInd,:),2).*srData)./size(spk(qualityUnitInd,:),2)];
-          
+
           % Percentiles
           percentiles = [12.5 25 100/3 37.5 50 62.5 200/3 75 87.5];
           percentileValues = prctile(pupilArea,percentiles);
-          
+
           areaFRPercentileIndividual_50DB = zeros(numel(qualityUnitInd),2);
           areaFRPercentileIndividual_50DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValues(5)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValues(5)),2);
           areaFRPercentileIndividual_50DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(5)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(5)),2);
           areaFRPercentileIndividual_50{iCondPlusAll}{iAreaPlusAll} = [areaFRPercentileIndividual_50{iCondPlusAll}{iAreaPlusAll}; areaFRPercentileIndividual_50DB];
-          
+
           areaFRPercentileIndividual_thirdDB = zeros(numel(qualityUnitInd),3);
           areaFRPercentileIndividual_thirdDB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValues(3)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValues(3)),2);
           areaFRPercentileIndividual_thirdDB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(3) & pupilArea<=percentileValues(7)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(3) & pupilArea<=percentileValues(7)),2);
           areaFRPercentileIndividual_thirdDB(:,3) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(7)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(7)),2);
           areaFRPercentileIndividual_third{iCondPlusAll}{iAreaPlusAll} = [areaFRPercentileIndividual_third{iCondPlusAll}{iAreaPlusAll}; areaFRPercentileIndividual_thirdDB];
-          
+
           areaFRPercentileIndividual_25DB = zeros(numel(qualityUnitInd),4);
           areaFRPercentileIndividual_25DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValues(2)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValues(2)),2);
           areaFRPercentileIndividual_25DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(2) & pupilArea<=percentileValues(5)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(2) & pupilArea<=percentileValues(5)),2);
           areaFRPercentileIndividual_25DB(:,3) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(5) & pupilArea<=percentileValues(8)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(5) & pupilArea<=percentileValues(8)),2);
           areaFRPercentileIndividual_25DB(:,4) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(8)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(8)),2);
           areaFRPercentileIndividual_25{iCondPlusAll}{iAreaPlusAll} = [areaFRPercentileIndividual_25{iCondPlusAll}{iAreaPlusAll}; areaFRPercentileIndividual_25DB];
-          
+
           areaFRPercentileIndividual_12p5DB = zeros(numel(qualityUnitInd),8);
           areaFRPercentileIndividual_12p5DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValues(1)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValues(1)),2);
           areaFRPercentileIndividual_12p5DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(1) & pupilArea<=percentileValues(2)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(1) & pupilArea<=percentileValues(2)),2);
@@ -666,38 +678,38 @@ if fullRun
           areaFRPercentileIndividual_12p5DB(:,7) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(8) & pupilArea<=percentileValues(9)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(8) & pupilArea<=percentileValues(9)),2);
           areaFRPercentileIndividual_12p5DB(:,8) = (sum(spk(qualityUnitInd,pupilArea>percentileValues(9)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValues(9)),2);
           areaFRPercentileIndividual_12p5{iCondPlusAll}{iAreaPlusAll} = [areaFRPercentileIndividual_12p5{iCondPlusAll}{iAreaPlusAll}; areaFRPercentileIndividual_12p5DB];
-          
+
           % Rise and decay
           areaFRRiseDecayIndividualDB = zeros(numel(qualityUnitInd),2);
           areaFRRiseDecayIndividualDB(:,1) = (sum(spk(qualityUnitInd,pupilAreaDiff>0),2).*srData)./size(spk(qualityUnitInd,pupilAreaDiff>0),2);
           areaFRRiseDecayIndividualDB(:,2) = (sum(spk(qualityUnitInd,pupilAreaDiff<0),2).*srData)./size(spk(qualityUnitInd,pupilAreaDiff<0),2);
           areaFRRiseDecayIndividual{iCondPlusAll}{iAreaPlusAll} = [areaFRRiseDecayIndividual{iCondPlusAll}{iAreaPlusAll}; areaFRRiseDecayIndividualDB];
-          
+
           % Filtered percentiles
           percentileValues = percentileValues - percentileValues(5);
           percentileValuesFilt = zeros(numel(percentileValues),numel(pupilAreaFiltLP0p001Hz));
           for iCent = 1:numel(percentileValues)
             percentileValuesFilt(iCent,:) = pupilAreaFiltLP0p001Hz + percentileValues(iCent);
           end
-          
+
           areaFRFiltLP0p001HzIndividual_50DB = zeros(numel(qualityUnitInd),2);
           areaFRFiltLP0p001HzIndividual_50DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(5,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(5,:)),2);
           areaFRFiltLP0p001HzIndividual_50DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(5,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(5,:)),2);
           areaFRFiltLP0p001HzIndividual_50{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltLP0p001HzIndividual_50{iCondPlusAll}{iAreaPlusAll}; areaFRFiltLP0p001HzIndividual_50DB];
-          
+
           areaFRFiltLP0p001HzIndividual_thirdDB = zeros(numel(qualityUnitInd),3);
           areaFRFiltLP0p001HzIndividual_thirdDB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(3,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(3,:)),2);
           areaFRFiltLP0p001HzIndividual_thirdDB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(3,:) & pupilArea<=percentileValuesFilt(7,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(3,:) & pupilArea<=percentileValuesFilt(7,:)),2);
           areaFRFiltLP0p001HzIndividual_thirdDB(:,3) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(7,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(7,:)),2);
           areaFRFiltLP0p001HzIndividual_third{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltLP0p001HzIndividual_third{iCondPlusAll}{iAreaPlusAll}; areaFRFiltLP0p001HzIndividual_thirdDB];
-          
+
           areaFRFiltLP0p001HzIndividual_25DB = zeros(numel(qualityUnitInd),4);
           areaFRFiltLP0p001HzIndividual_25DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(2,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(2,:)),2);
           areaFRFiltLP0p001HzIndividual_25DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(2,:) & pupilArea<=percentileValuesFilt(5,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(2,:) & pupilArea<=percentileValuesFilt(5,:)),2);
           areaFRFiltLP0p001HzIndividual_25DB(:,3) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(5,:) & pupilArea<=percentileValuesFilt(8,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(5,:) & pupilArea<=percentileValuesFilt(8,:)),2);
           areaFRFiltLP0p001HzIndividual_25DB(:,4) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(8,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(8,:)),2);
           areaFRFiltLP0p001HzIndividual_25{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltLP0p001HzIndividual_25{iCondPlusAll}{iAreaPlusAll}; areaFRFiltLP0p001HzIndividual_25DB];
-          
+
           areaFRFiltLP0p001HzIndividual_12p5DB = zeros(numel(qualityUnitInd),8);
           areaFRFiltLP0p001HzIndividual_12p5DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(1,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValuesFilt(1,:)),2);
           areaFRFiltLP0p001HzIndividual_12p5DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(1,:) & pupilArea<=percentileValuesFilt(2,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(1,:) & pupilArea<=percentileValuesFilt(2,:)),2);
@@ -708,19 +720,19 @@ if fullRun
           areaFRFiltLP0p001HzIndividual_12p5DB(:,7) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(8,:) & pupilArea<=percentileValuesFilt(9,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(8,:) & pupilArea<=percentileValuesFilt(9,:)),2);
           areaFRFiltLP0p001HzIndividual_12p5DB(:,8) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt(9,:)),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt(9,:)),2);
           areaFRFiltLP0p001HzIndividual_12p5{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltLP0p001HzIndividual_12p5{iCondPlusAll}{iAreaPlusAll}; areaFRFiltLP0p001HzIndividual_12p5DB];
-          
+
           percentileValuesFilt = pupilAreaFiltLP0p01Hz;
           areaFRFiltLP0p01HzIndividual_50DB = zeros(numel(qualityUnitInd),2);
           areaFRFiltLP0p01HzIndividual_50DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValuesFilt),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValuesFilt),2);
           areaFRFiltLP0p01HzIndividual_50DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt),2);
           areaFRFiltLP0p01HzIndividual_50{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltLP0p01HzIndividual_50{iCondPlusAll}{iAreaPlusAll}; areaFRFiltLP0p01HzIndividual_50DB];
-          
+
           percentileValuesFilt = pupilAreaFiltLP0p1Hz;
           areaFRFiltLP0p1HzIndividual_50DB = zeros(numel(qualityUnitInd),2);
           areaFRFiltLP0p1HzIndividual_50DB(:,1) = (sum(spk(qualityUnitInd,pupilArea<=percentileValuesFilt),2).*srData)./size(spk(qualityUnitInd,pupilArea<=percentileValuesFilt),2);
           areaFRFiltLP0p1HzIndividual_50DB(:,2) = (sum(spk(qualityUnitInd,pupilArea>percentileValuesFilt),2).*srData)./size(spk(qualityUnitInd,pupilArea>percentileValuesFilt),2);
           areaFRFiltLP0p1HzIndividual_50{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltLP0p1HzIndividual_50{iCondPlusAll}{iAreaPlusAll}; areaFRFiltLP0p1HzIndividual_50DB];
-          
+
           % Phases
           areaFRFiltBP0p01to0p05HzIndividual_pi{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_pi{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi, 0, qualityUnitInd)];
           areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, 2*pi/3, 0, qualityUnitInd)];
@@ -731,7 +743,7 @@ if fullRun
           areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi/8, 0, qualityUnitInd)];
           areaFRFiltBP0p01to0p05HzIndividual_piOver12{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piOver12{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi/12, 0, qualityUnitInd)];
           areaFRFiltBP0p01to0p05HzIndividual_piOver16{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piOver16{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi/16, 0, qualityUnitInd)];
-          
+
           areaFRFiltBP0p1to0p5HzIndividual_pi{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_pi{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi, 0, qualityUnitInd)];
           areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, 2*pi/3, 0, qualityUnitInd)];
           areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi/2, 0, qualityUnitInd)];
@@ -741,7 +753,7 @@ if fullRun
           areaFRFiltBP0p1to0p5HzIndividual_piOver8{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_piOver8{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi/8, 0, qualityUnitInd)];
           areaFRFiltBP0p1to0p5HzIndividual_piOver12{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_piOver12{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi/12, 0, qualityUnitInd)];
           areaFRFiltBP0p1to0p5HzIndividual_piOver16{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_piOver16{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi/16, 0, qualityUnitInd)];
-          
+
           % Shifted phases
           areaFRFiltBP0p01to0p05HzIndividual_piShifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piShifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi, pi/2, qualityUnitInd)];
           areaFRFiltBP0p01to0p05HzIndividual_2piOver3Shifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_2piOver3Shifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, 2*pi/3, pi/3, qualityUnitInd)];
@@ -752,7 +764,7 @@ if fullRun
           areaFRFiltBP0p01to0p05HzIndividual_piOver8Shifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piOver8Shifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi/8, pi/16, qualityUnitInd)];
           areaFRFiltBP0p01to0p05HzIndividual_piOver12Shifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piOver12Shifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi/12, pi/24, qualityUnitInd)];
           areaFRFiltBP0p01to0p05HzIndividual_piOver16Shifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p01to0p05HzIndividual_piOver16Shifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p01to0p05Hz, pi/16, pi/32, qualityUnitInd)];
-          
+
           areaFRFiltBP0p1to0p5HzIndividual_piShifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_piShifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi, pi/2, qualityUnitInd)];
           areaFRFiltBP0p1to0p5HzIndividual_2piOver3Shifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_2piOver3Shifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, 2*pi/3, pi/3, qualityUnitInd)];
           areaFRFiltBP0p1to0p5HzIndividual_piOver2Shifted{iCondPlusAll}{iAreaPlusAll} = [areaFRFiltBP0p1to0p5HzIndividual_piOver2Shifted{iCondPlusAll}{iAreaPlusAll}; firingRateByPhase(spk, srData, phaseFiltBP0p1to0p5Hz, pi/2, pi/4, qualityUnitInd)];
@@ -856,7 +868,7 @@ if drawDistros
         [statsMeanFRPercentile50{iCond}{iAreasOI(iArea)}, statsVarFRPercentile50{iCond}{iAreasOI(iArea)}, statsMeanFRPercentile50Split{iCond}{iAreasOI(iArea)},...
           statsVarFRPercentile50Split{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}, [], options);
       end
-      
+
       options.figName = ['FiringRateCentile25_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:25 cent','25:50 cent','50:75 cent','75:100 cent'};
       if strcmpi(subpop, 'all')
@@ -868,7 +880,7 @@ if drawDistros
         [statsMeanFRPercentile25{iCond}{iAreasOI(iArea)}, statsVarFRPercentile25{iCond}{iAreasOI(iArea)}, statsMeanFRPercentile25Split{iCond}{iAreasOI(iArea)},...
           statsVarFRPercentile25Split{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}, [], options);
       end
-      
+
       options.figName = ['FiringRateCentile12p5_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:12.5 cent','12.5:25 cent','25:37.5 cent','37.5:50 cent','50:62.5 cent','62.5:75 cent','75:87.5 cent','87.5:100 cent'};
       if strcmpi(subpop, 'all')
@@ -880,7 +892,7 @@ if drawDistros
         [statsMeanFRPercentile12p5{iCond}{iAreasOI(iArea)}, statsVarFRPercentile12p5{iCond}{iAreasOI(iArea)}, statsMeanFRPercentile12p5Split{iCond}{iAreasOI(iArea)},...
           statsVarFRPercentile12p5Split{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}, [], options);
       end
-      
+
       options.figName = ['FiringRateCentileThird_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:33.3 cent','33.3:66.7 cent','67.7:100 cent'};
       if strcmpi(subpop, 'all')
@@ -892,7 +904,7 @@ if drawDistros
         [statsMeanFRPercentileThird{iCond}{iAreasOI(iArea)}, statsVarFRPercentileThird{iCond}{iAreasOI(iArea)}, statsMeanFRPercentileThirdSplit{iCond}{iAreasOI(iArea)},...
           statsVarFRPercentileThirdSplit{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}, [], options);
       end
-      
+
       options.plotType = 'extremes';
       if ~isempty(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)})
         options.figName = ['FiringRateCentile25Grey_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
@@ -902,7 +914,7 @@ if drawDistros
         options.stats = varTest(logRates(:,[1 end]));
         histPlotFR(edges, logRates, options);
       end
-      
+
       if ~isempty(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)})
         options.figName = ['FiringRateCentile12p5Grey_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
         options.legendLabels = {'0:12.5 cent','87.5:100 cent'};
@@ -911,7 +923,7 @@ if drawDistros
         options.stats = varTest(logRates(:,[1 end]));
         histPlotFR(edges, logRates, options);
       end
-      
+
       if ~isempty(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)})
         options.figName = ['FiringRateCentileThirdGrey_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
         options.legendLabels = {'0:33.3 cent','67.7:100 cent'};
@@ -920,178 +932,178 @@ if drawDistros
         options.stats = varTest(logRates(:,[1 end]));
         histPlotFR(edges, logRates, options);
       end
-      
+
       options.plotType = 'regular';
       options.figName = ['FiringRateRiseDecay_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'Dilating','Constricting'};
       [statsMeanFRRiseDecay{iCond}{iAreasOI(iArea)}, statsVarFRRiseDecay{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRRiseDecayIndividual{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltLP0p001Hz50_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:50 cent','50:100 cent'};
       [statsMeanFRFiltLP0p001Hz50{iCond}{iAreasOI(iArea)}, statsVarFRFiltLP0p001Hz50{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltLP0p001HzIndividual_50{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltLP0p001Hz25_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:25 cent','25:50 cent','50:75 cent','75:100 cent'};
       [statsMeanFRFiltLP0p001Hz25{iCond}{iAreasOI(iArea)}, statsVarFRFiltLP0p001Hz25{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltLP0p001HzIndividual_25{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltLP0p001Hz12p5_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:12.5 cent','12.5:25 cent','25:37.5 cent','37.5:50 cent','50:62.5 cent','62.5:75 cent','75:87.5 cent','87.5:100 cent'};
       [statsMeanFRFiltLP0p001Hz12p5{iCond}{iAreasOI(iArea)}, statsVarFRFiltLP0p001Hz12p5{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltLP0p001HzIndividual_12p5{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltLP0p001HzThird_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:33.3 cent','33.3:66.7 cent','67.7:100 cent'};
       [statsMeanFRFiltLP0p001HzThird{iCond}{iAreasOI(iArea)}, statsVarFRFiltLP0p001HzThird{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltLP0p001HzIndividual_third{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltLP0p01Hz50_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:50 cent','50:100 cent'};
       [statsMeanFRFiltLP0p01Hz50{iCond}{iAreasOI(iArea)}, statsVarFRFiltLP0p01Hz50{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltLP0p01HzIndividual_50{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltLP0p1Hz50_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       options.legendLabels = {'0:50 cent','50:100 cent'};
       [statsMeanFRFiltLP0p1Hz50{iCond}{iAreasOI(iArea)}, statsVarFRFiltLP0p1Hz50{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltLP0p1HzIndividual_50{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPi_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi','\pi:2\pi'};
       options.legendLabels = {'\pi:0','0:-\pi'};
       [statsMeanFRFiltBP0p01to0p05HzPi{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPi{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05Hz2PiOver3_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
       options.legendLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
       [statsMeanFRFiltBP0p01to0p05Hz2piOver3{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05Hz2piOver3{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver2_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
       options.legendLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver2{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver2{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver2{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver3_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
       options.legendLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver3{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver3{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver3{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver4_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
       options.legendLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver4{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver4{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver4{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver6_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
       options.legendLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver6{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver6{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver6{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver8_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
       options.legendLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver8{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver8{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiShifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi]-\pi/2','[\pi:2\pi]-\pi/2'};
       options.legendLabels = {'[\pi:0]-\pi/2','[0:-\pi]-\pi/2'};
       [statsMeanFRFiltBP0p01to0p05HzPiShifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiShifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piShifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05Hz2PiOver3Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:2\pi/3]-\pi/3','[2\pi/3:4\pi/3]-\pi/3','[4\pi/3:2\pi]-\pi/3'};
       options.legendLabels = {'[\pi:\pi/3]-\pi/3','[\pi/3:-\pi/3]-\pi/3','[-\pi/3:-\pi]-\pi/3'};
       [statsMeanFRFiltBP0p01to0p05Hz2piOver3Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05Hz2piOver3Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_2piOver3Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver2Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/2]-\pi/4','[\pi/2:\pi]-\pi/4','[\pi:3\pi/2]-\pi/4','[3\pi/2:2\pi]-\pi/4'};
       options.legendLabels = {'[\pi:\pi/2]-\pi/4','[\pi/2:0]-\pi/4','[0:-\pi/2]-\pi/4','[-\pi/2:-pi]-\pi/4'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver2Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver2Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver2Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver3Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/3]-\pi/6','[\pi/3:2\pi/3]-\pi/6','[2\pi/3:\pi]-\pi/6','[\pi:4\pi/3]-\pi/6','[4\pi/3:5\pi/3]-\pi/6','[5\pi/3:2\pi]-\pi/6'};
       options.legendLabels = {'[\pi:2\pi/3]-\pi/6','[2\pi/3:\pi/3]-\pi/6','[\pi/3:0]-\pi/6','[0:-\pi/3]-\pi/6','[-\pi/3:-2\pi/3]-\pi/6','[-2\pi/3:-pi]-\pi/6'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver3Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver3Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver3Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver4Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/4]-\pi/8','[\pi/4:2\pi/4]-\pi/8','[2\pi/4:3\pi/4]-\pi/8','[3\pi/4:\pi]-\pi/8','[\pi:5\pi/4]-\pi/8','[5\pi/4:6\pi/4]-\pi/8','[6\pi/4:7\pi/4]-\pi/8','[7\pi/4:2\pi]-\pi/8'};
       options.legendLabels = {'[\pi:3\pi/4]-\pi/8','[3\pi/4:\pi/2]-\pi/8','[\pi/2:\pi/4]-\pi/8','[\pi/4:0]-\pi/8','[0:-\pi/4]-\pi/8','[-\pi/4:-\pi/2]-\pi/8','[-\pi/2:-3\pi/4]-\pi/8','[-3\pi/4:-\pi]-\pi/8'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver4Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver4Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver4Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver6Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/6]-\pi/12','[\pi/6:2\pi/6]-\pi/12','[2\pi/6:3\pi/6]-\pi/12','[3\pi/6:4\pi/6]-\pi/12','[4\pi/6:5\pi/6]-\pi/12','[5\pi/6:\pi]-\pi/12','[\pi:7\pi/6]-\pi/12','[7\pi/6:8\pi/6]-\pi/12','[8\pi/6:9\pi/6]-\pi/12','[9\pi/6:10\pi/6]-\pi/12','[10\pi/6:11\pi/6]-\pi/12','[11\pi/6:2\pi]-\pi/12'};
       options.legendLabels = {'[\pi:5\pi/6]-\pi/12','[5\pi/6:4\pi/6]-\pi/12','[4\pi/6:3\pi/6]-\pi/12','[3\pi/6:2\pi/6]-\pi/12','[2\pi/6:\pi/6]-\pi/12','[\pi/6:0]-\pi/12','[0:-\pi/6]-\pi/12','[-\pi/6:-2\pi/6]-\pi/12','[-2\pi/6:-3\pi/6]-\pi/12','[-3\pi/6:-4\pi/6]-\pi/12','[-4\pi/6:-5\pi/6]-\pi/12','[-5\pi/6:-\pi]-\pi/12'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver6Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver6Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver6Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p01to0p05HzPiOver8Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/8]-\pi/16','[\pi/8:2\pi/8]-\pi/16','[2\pi/8:3\pi/8]-\pi/16','[3\pi/8:4\pi/8]-\pi/16','[4\pi/8:5\pi/8]-\pi/16','[5\pi/8:6\pi/8]-\pi/16','[6\pi/8:7\pi/8]-\pi/16','[7\pi/8:\pi]-\pi/16','[\pi:9\pi/8]-\pi/16','[9\pi/8:10\pi/8]-\pi/16','[10\pi/8:11\pi/8]-\pi/16','[11\pi/8:12\pi/8]-\pi/16','[12\pi/8:13\pi/8]-\pi/16','[13\pi/8:14\pi/8]-\pi/16','[14\pi/8:15\pi/8]-\pi/16','[15\pi/8:2\pi]-\pi/16'};
       options.legendLabels = {'[\pi:7\pi/8]-\pi/16','[7\pi/8:6\pi/8]-\pi/16','[6\pi/8:5\pi/8]-\pi/16','[5\pi/8:4\pi/8]-\pi/16','[4\pi/8:3\pi/8]-\pi/16','[3\pi/8:2\pi/8]-\pi/16','[2\pi/8:\pi/8]-\pi/16','[\pi/8:0]-\pi/16','[0:-\pi/8]-\pi/16','[-\pi/8:-2\pi/8]-\pi/16','[-2\pi/8:-3\pi/8]-\pi/16','[-3\pi/8:-4\pi/8]-\pi/16','[-4\pi/8:-5\pi/8]-\pi/16','[-5\pi/8:-6\pi/8]-\pi/16','[-6\pi/8:-7\pi/8]-\pi/16','[-7\pi/8:-\pi]-\pi/16'};
       [statsMeanFRFiltBP0p01to0p05HzPiOver8Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p01to0p05HzPiOver8Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p01to0p05HzIndividual_piOver8Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPi_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi','\pi:2\pi'};
       options.legendLabels = {'\pi:0','0:-\pi'};
       [statsMeanFRFiltBP0p1to0p5HzPi{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPi{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_pi{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5Hz2PiOver3_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
       options.legendLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
       [statsMeanFRFiltBP0p1to0p5Hz2piOver3{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5Hz2piOver3{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver2_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
       options.legendLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver2{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver2{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver3_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
       options.legendLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver3{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver3{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver3{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver4_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
       options.legendLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver4{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver4{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver4{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver6_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
       options.legendLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver6{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver6{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver6{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver8_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
       options.legendLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver8{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver8{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver8{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiShifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi]-\pi/2','[\pi:2\pi]-\pi/2'};
       options.legendLabels = {'[\pi:0]-\pi/2','[0:-\pi]-\pi/2'};
       [statsMeanFRFiltBP0p1to0p5HzPiShifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiShifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piShifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5Hz2PiOver3Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:2\pi/3]-\pi/3','[2\pi/3:4\pi/3]-\pi/3','[4\pi/3:2\pi]-\pi/3'};
       options.legendLabels = {'[\pi:\pi/3]-\pi/3','[\pi/3:-\pi/3]-\pi/3','[-\pi/3:-\pi]-\pi/3'};
       [statsMeanFRFiltBP0p1to0p5Hz2piOver3Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5Hz2piOver3Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_2piOver3Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver2Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/2]-\pi/4','[\pi/2:\pi]-\pi/4','[\pi:3\pi/2]-\pi/4','[3\pi/2:2\pi]-\pi/4'};
       options.legendLabels = {'[\pi:\pi/2]-\pi/4','[\pi/2:0]-\pi/4','[0:-\pi/2]-\pi/4','[-\pi/2:-pi]-\pi/4'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver2Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver2Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver2Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver3Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/3]-\pi/6','[\pi/3:2\pi/3]-\pi/6','[2\pi/3:\pi]-\pi/6','[\pi:4\pi/3]-\pi/6','[4\pi/3:5\pi/3]-\pi/6','[5\pi/3:2\pi]-\pi/6'};
       options.legendLabels = {'[\pi:2\pi/3]-\pi/6','[2\pi/3:\pi/3]-\pi/6','[\pi/3:0]-\pi/6','[0:-\pi/3]-\pi/6','[-\pi/3:-2\pi/3]-\pi/6','[-2\pi/3:-pi]-\pi/6'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver3Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver3Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver3Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver4Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/4]-\pi/8','[\pi/4:2\pi/4]-\pi/8','[2\pi/4:3\pi/4]-\pi/8','[3\pi/4:\pi]-\pi/8','[\pi:5\pi/4]-\pi/8','[5\pi/4:6\pi/4]-\pi/8','[6\pi/4:7\pi/4]-\pi/8','[7\pi/4:2\pi]-\pi/8'};
       options.legendLabels = {'[\pi:3\pi/4]-\pi/8','[3\pi/4:\pi/2]-\pi/8','[\pi/2:\pi/4]-\pi/8','[\pi/4:0]-\pi/8','[0:-\pi/4]-\pi/8','[-\pi/4:-\pi/2]-\pi/8','[-\pi/2:-3\pi/4]-\pi/8','[-3\pi/4:-\pi]-\pi/8'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver4Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver4Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver4Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver6Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/6]-\pi/12','[\pi/6:2\pi/6]-\pi/12','[2\pi/6:3\pi/6]-\pi/12','[3\pi/6:4\pi/6]-\pi/12','[4\pi/6:5\pi/6]-\pi/12','[5\pi/6:\pi]-\pi/12','[\pi:7\pi/6]-\pi/12','[7\pi/6:8\pi/6]-\pi/12','[8\pi/6:9\pi/6]-\pi/12','[9\pi/6:10\pi/6]-\pi/12','[10\pi/6:11\pi/6]-\pi/12','[11\pi/6:2\pi]-\pi/12'};
       options.legendLabels = {'[\pi:5\pi/6]-\pi/12','[5\pi/6:4\pi/6]-\pi/12','[4\pi/6:3\pi/6]-\pi/12','[3\pi/6:2\pi/6]-\pi/12','[2\pi/6:\pi/6]-\pi/12','[\pi/6:0]-\pi/12','[0:-\pi/6]-\pi/12','[-\pi/6:-2\pi/6]-\pi/12','[-2\pi/6:-3\pi/6]-\pi/12','[-3\pi/6:-4\pi/6]-\pi/12','[-4\pi/6:-5\pi/6]-\pi/12','[-5\pi/6:-\pi]-\pi/12'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver6Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver6Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver6Shifted{iCond}{iAreasOI(iArea)}, [], options);
-      
+
       options.figName = ['FiringRateFiltBP0p1to0p5HzPiOver8Shifted_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
       %options.legendLabels = {'[0:\pi/8]-\pi/16','[\pi/8:2\pi/8]-\pi/16','[2\pi/8:3\pi/8]-\pi/16','[3\pi/8:4\pi/8]-\pi/16','[4\pi/8:5\pi/8]-\pi/16','[5\pi/8:6\pi/8]-\pi/16','[6\pi/8:7\pi/8]-\pi/16','[7\pi/8:\pi]-\pi/16','[\pi:9\pi/8]-\pi/16','[9\pi/8:10\pi/8]-\pi/16','[10\pi/8:11\pi/8]-\pi/16','[11\pi/8:12\pi/8]-\pi/16','[12\pi/8:13\pi/8]-\pi/16','[13\pi/8:14\pi/8]-\pi/16','[14\pi/8:15\pi/8]-\pi/16','[15\pi/8:2\pi]-\pi/16'};
       options.legendLabels = {'[\pi:7\pi/8]-\pi/16','[7\pi/8:6\pi/8]-\pi/16','[6\pi/8:5\pi/8]-\pi/16','[5\pi/8:4\pi/8]-\pi/16','[4\pi/8:3\pi/8]-\pi/16','[3\pi/8:2\pi/8]-\pi/16','[2\pi/8:\pi/8]-\pi/16','[\pi/8:0]-\pi/16','[0:-\pi/8]-\pi/16','[-\pi/8:-2\pi/8]-\pi/16','[-2\pi/8:-3\pi/8]-\pi/16','[-3\pi/8:-4\pi/8]-\pi/16','[-4\pi/8:-5\pi/8]-\pi/16','[-5\pi/8:-6\pi/8]-\pi/16','[-6\pi/8:-7\pi/8]-\pi/16','[-7\pi/8:-\pi]-\pi/16'};
       [statsMeanFRFiltBP0p1to0p5HzPiOver8Shifted{iCond}{iAreasOI(iArea)}, statsVarFRFiltBP0p1to0p5HzPiOver8Shifted{iCond}{iAreasOI(iArea)}] = firingRateTestAndPlot(edges, areaFRFiltBP0p1to0p5HzIndividual_piOver8Shifted{iCond}{iAreasOI(iArea)}, [], options);
     end
   end
-  
+
   % Save variance data
   save(filename, 'statsMeanFRPercentile50','statsMeanFRPercentile25','statsMeanFRPercentile12p5','statsMeanFRPercentileThird','statsMeanFRRiseDecay',...
     'statsMeanFRFiltLP0p001Hz50','statsMeanFRFiltLP0p001Hz25','statsMeanFRFiltLP0p001Hz12p5','statsMeanFRFiltLP0p001HzThird',...

@@ -25,10 +25,10 @@ params
 lists
 
 if ~exist('repository', 'var')
-  repository = 'all';
+  repository = 'uol'; % 'uol' | 'allensdk'
 end
 if ~exist('subpop', 'var')
-  subpop = 'all';
+  subpop = 'all'; % 'all' | 'positive' | 'negative'
 end
 if ~exist('fullRun', 'var')
   fullRun = true;
@@ -37,34 +37,39 @@ if ~exist('reverse', 'var')
   reverse = false;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    mainFolder = [dataDir filesep caDir filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    mainFolder = [dataDir filesep caDir_positive filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    mainFolder = [dataDir filesep caDir_negative filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_negative filesep PRsFolder];
   end
   animals = animalsOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    mainFolder = [dataDir filesep caDir_uol filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_uol filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    mainFolder = [dataDir filesep caDir_uol_positive filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_uol_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    mainFolder = [dataDir filesep caDir_uol_negative filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_uol_negative filesep PRsFolder];
   end
   animals = animalsUOLOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    mainFolder = [dataDir filesep caDir_allensdk filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_allensdk filesep PRsFolder];
   elseif strcmp(subpop, 'positive')
-    mainFolder = [dataDir filesep caDir_allensdk_positive filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_allensdk_positive filesep PRsFolder];
   elseif strcmp(subpop, 'negative')
-    mainFolder = [dataDir filesep caDir_allensdk_negative filesep PRsFolder];
+    mainFolder = [outputDir filesep caDir_allensdk_negative filesep PRsFolder];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};
@@ -73,11 +78,11 @@ end
 areas = areas2compare;
 
 unitsOnlyPR = false;
-drawPhaseProfiles = [false false];
-drawCohProfiles = [false false];
+drawPhaseProfiles = [true true];
+drawCohProfiles = [true true];
 drawPhaseSums = false;
-drawPhaseHistos = [false false false];
-doStats = false;
+drawPhaseHistos = [true true true];
+doStats = true;
 
 
 %% COMPUTE VARIABLES NEEDED FOR DISPLAYING UNIT PHASE AND COHERENCE FREQUENCY PROFILES
@@ -110,7 +115,7 @@ if fullRun
       end
       fnsData_ca = fieldnames(dataStruct.seriesData_ca_negative);
     end
-    
+
     % Initialise storage variables
     try
       if strcmp(subpop, 'all')
@@ -196,7 +201,7 @@ if fullRun
         areaFreqFullInterpIndividual{iCond} = areaFreqFullInterpIndividualCond;
       end
     end
-    
+
     % Initialise coherence matrices
     if animal == 1 || ~exist('recMatInit', 'var')
       recMatInit = NaN(matSize,matSize,numel(FOI));
@@ -217,7 +222,7 @@ if fullRun
         animalMat{iCond} = {};
       end
     end
-    
+
     for dbCount = 1:numel(fnsData_ca) % Loop through database entries
       if strcmp(subpop, 'all')
         dbStruct_ca = dataStruct.seriesData_ca.(fnsData_ca{dbCount});
@@ -229,7 +234,7 @@ if fullRun
       if isempty(dbStruct_ca)
         continue
       end
-      
+
       % Determine if series phase and coherence data exist
       if exist('seriesName1', 'var')
         prevRec = seriesName1(1:14);
@@ -251,12 +256,12 @@ if fullRun
           continue
         end
       end
-      
+
       % Test for exceptions
       if exceptionTest(except, seriesName1, seriesName2)
         continue
       end
-      
+
       % Determine if population rate > 0
       if strcmp(subpop, 'all')
         if isempty(dataStruct.seriesData.([animals{animal} '_s' seriesName1]))
@@ -308,7 +313,7 @@ if fullRun
       if breakClause
         continue
       end
-      
+
       % Determine area comparison and any grouped area comparisons
       if strcmp(repository, 'all')
         breakClause = true;
@@ -320,23 +325,23 @@ if fullRun
       if breakClause
         continue
       end
-      
+
       % Determine recording condition (i.e., awake or anaesthesia)
       [breakClause, iCond] = series2condition(awake, anaesthesia, seriesName1, seriesName2);
       if breakClause
         continue
       end
-      
+
       for iComp = 1:numel(comp) % Loop through non-grouped and grouped area comparisons
         area = comp(iComp);
-        
+
         if numel(conditions) > 1
           condLoop = [iCond numel(conditions)];
         else
           condLoop = iCond;
         end
         for iCondPlusAll = condLoop % Loop through the main and pooled conditions
-          
+
           % Assign matrices
           if expandMatrices
             recMat{iCondPlusAll}{numel(recMat{iCondPlusAll})+1} = recMatInit;
@@ -353,7 +358,7 @@ if fullRun
               expandMatrices = false;
             end
           end
-          
+
           % Load coherence of the population rate
           if ~unitsOnlyPR
             coh = dbStruct_ca.popData.phaseCohPop.coh;
@@ -370,7 +375,7 @@ if fullRun
           coh_confL(coh_confL <= 0) = NaN;
           coh = coh .* rateadjust_kappa;
           coh(isnan(coh_confU) | isnan(coh_confL)) = NaN;
-          
+
           % Load phase of the population rate
           if ~unitsOnlyPR
             phase = bestUnwrap(dbStruct_ca.popData.phaseCohPop.phase);
@@ -385,13 +390,13 @@ if fullRun
             phase(isnan(phase_confU) | isnan(phase_confL) | isnan(coh) | isnan(coh_confU) | isnan(coh_confL)) = NaN;
             freq = dbStruct_ca.popData.phaseCohPopUnitOnly.freq;
           end
-          
+
           % Ascertain that significant number of entries is the same for both phase and coherence
           coh(isnan(phase) | isnan(phase_confU) | isnan(phase_confL)) = NaN;
           coh_confU(isnan(phase) | isnan(phase_confU) | isnan(phase_confL)) = NaN;
           coh_confL(isnan(phase) | isnan(phase_confU) | isnan(phase_confL)) = NaN;
           assert(sum(isnan(phase)) == sum(isnan(coh)));
-          
+
           % Obtain and store phase and coherence values for FOI
           if sum(~isnan(phase)) && sum(~isnan(coh))
             [phaseFOI, cohFOI, cohConfFOI] = phaseCohFOI(FOI, freq, phase, coh, [coh_confU; coh_confL]);
@@ -404,7 +409,7 @@ if fullRun
           cohConfLFOI = cohConfFOI(2,:);
           areaCohFOIindividual{iCondPlusAll}{area} = [areaCohFOIindividual{iCondPlusAll}{area}; cohFOI];
           areaPhaseFOIindividual{iCondPlusAll}{area} = [areaPhaseFOIindividual{iCondPlusAll}{area}; phaseFOI];
-          
+
           % Obtain and store original full phase and coherence values
           areaCohFullIndividual{iCondPlusAll}{area}{numel(areaCohFullIndividual{iCondPlusAll}{area})+1} = coh;
           areaCohConfUFullIndividual{iCondPlusAll}{area}{numel(areaCohConfUFullIndividual{iCondPlusAll}{area})+1} = coh_confU;
@@ -413,12 +418,12 @@ if fullRun
           areaPhaseConfUFullIndividual{iCondPlusAll}{area}{numel(areaPhaseConfUFullIndividual{iCondPlusAll}{area})+1} = phase_confU;
           areaPhaseConfLFullIndividual{iCondPlusAll}{area}{numel(areaPhaseConfLFullIndividual{iCondPlusAll}{area})+1} = phase_confL;
           areaFreqFullIndividual{iCondPlusAll}{area}{numel(areaFreqFullIndividual{iCondPlusAll}{area})+1} = freq;
-          
+
           % Determine coherence matrix entry
           [areaName1, areaName2] = comparison2areas(compNames{iComp});
           [~, ~, ~, row] = determineArea(areaName1);
           [~, ~, ~, col] = determineArea(areaName2);
-          
+
           % Compute coherence matrices
           if ~isempty(row) && ~isempty(col)
             for iF = 1:numel(FOI)
@@ -445,7 +450,7 @@ if fullRun
       end
     end
   end
-  
+
   % Calculate mean of coherence matrices
   for iCond = 1:numel(conditions)
     cohMatMean{iCond} = zeros(matSize,matSize,numel(FOI));
@@ -468,11 +473,11 @@ if fullRun
     cohConfUMatMean{iCond} = cohConfUMatMean{iCond} ./ tallyMat{iCond};
     cohConfLMatMean{iCond} = cohConfLMatMean{iCond} ./ tallyMat{iCond};
   end
-  
+
   % Update area names in case they are reversed
   areas = areasReverse;
   areaRecCountMeaning = areas;
-  
+
   % Interpolate and store full phases and coherences
   freqCombined = FOI;
   for iCond = 1:numel(conditions)

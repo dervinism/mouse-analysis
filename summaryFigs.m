@@ -1,5 +1,5 @@
-repository = 'allensdk'; % 'uol' or 'allensdk'
-subpop = 'positive'; %'all', 'positive', 'negative'
+repository = 'uol'; % 'uol' or 'allensdk'
+subpop = 'all'; %'all', 'positive', 'negative'
 fullRun = true; % Full data analyses (true) or only creating figures (false)
 includeRuns = 'noRun'; % 'run', 'noRun'
 
@@ -7,9 +7,9 @@ params
 
 if ~exist('allData', 'var') && fullRun % load allData which contains full spiking data
   if strcmp(repository,'uol')
-    load([dataDir filesep includeRuns filesep 'allData_uol.mat']);
-  elseif strcmp(repository,'allensdk')
-    load([dataDir filesep includeRuns filesep 'allData_allensdk.mat']);
+    load([dataDir_local filesep '001_uol' filesep includeRuns filesep 'allData_uol.mat']);
+  elseif strcmp(repository,'allensdk') %#ok<*UNRCH>
+    load([dataDir_local filesep '002_allen' filesep includeRuns filesep 'allData_allensdk.mat']);
   end
 end
 
@@ -44,22 +44,22 @@ globalPhaseAnalysis_unitsLocal
 %   %globalConditionsAnalysis
 % end
 
-qualityCheck = false;
-globalPhaseAnalysis_unitsLaminar % run twice
+% qualityCheck = false;
+% globalPhaseAnalysis_unitsLaminar % run twice
 % if strcmp(repository,'all') || strcmp(repository,'uol')
 %   qualityCheck = true;
 %   globalPhaseAnalysis_unitsLaminar
 % end
 
-qualityCheck = false;
-globalWaveformAnalysis
+% qualityCheck = false;
+% globalWaveformAnalysis
 % if strcmp(repository,'all') || strcmp(repository,'uol')
 %   qualityCheck = true;
 %   globalWaveformAnalysis
 % end
 
 qualityCheck = false;
-globalFRPhaseAnalysis
+globalFRPhaseAnalysis % This is important
 % if strcmp(repository,'all') || strcmp(repository,'uol')
 %   qualityCheck = true;
 %   globalFRPhaseAnalysis
@@ -112,14 +112,14 @@ if strcmpi(subpop,'all')
   globalCoherenceAnalysis
   reverse = true;
   globalCoherenceAnalysis
-  
-%   if strcmp(repository,'all') || strcmp(repository,'uol')
-%     qualityCheck = true;
-%     reverse = false;
-%     globalCoherenceAnalysis
-%     reverse = true;
-%     globalCoherenceAnalysis
-%   end
+
+  % if strcmp(repository,'all') || strcmp(repository,'uol')
+  %   qualityCheck = true;
+  %   reverse = false;
+  %   globalCoherenceAnalysis
+  %   reverse = true;
+  %   globalCoherenceAnalysis
+  % end
 end
 
 
@@ -131,7 +131,7 @@ opt.xlim = [0.01 30];
 if strcmp(repository,'uol')
   if strcmp(subpop, 'all')
     opt.ylim = [-pi-pi/2 pi+pi/2];
-    mainFolder = [dataDir filesep includeRuns filesep caDir_uol filesep unitsFolder];
+    mainFolder = [outputDir filesep includeRuns filesep caDir_uol filesep unitsFolder];
     figFolder = [mainFolder filesep 'meanPhaseSums'];
     dataRegular = load([mainFolder filesep 'globalUnits_ca.mat']);
     dataReverse = load([mainFolder filesep 'globalUnits_ca_reverse.mat']);
@@ -253,7 +253,7 @@ if strcmp(repository,'uol')
   
   if strcmp(subpop, 'positive')
     opt.ylim = [-pi-pi/2 pi+pi/2];
-    mainFolder = [dataDir filesep includeRuns filesep caDir_uol_positive filesep unitsFolder];
+    mainFolder = [outputDir filesep includeRuns filesep caDir_uol_positive filesep unitsFolder];
     figFolder = [mainFolder filesep 'meanPhaseSums'];
     dataRegular = load([mainFolder filesep 'globalUnits_ca.mat']);
     dataReverse = load([mainFolder filesep 'globalUnits_ca_reverse.mat']);
@@ -375,7 +375,7 @@ if strcmp(repository,'uol')
   
   if strcmp(subpop, 'negative')
     opt.ylim = [-pi-pi/2 pi+pi/2];
-    mainFolder = [dataDir filesep includeRuns filesep caDir_uol_negative filesep unitsFolder];
+    mainFolder = [outputDir filesep includeRuns filesep caDir_uol_negative filesep unitsFolder];
     figFolder = [mainFolder filesep 'meanPhaseSums'];
     dataRegular = load([mainFolder filesep 'globalUnits_ca.mat']);
     dataReverse = load([mainFolder filesep 'globalUnits_ca_reverse.mat']);
@@ -498,7 +498,7 @@ if strcmp(repository,'uol')
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
     opt.ylim = [-pi-pi/2 pi+pi/2];
-    mainFolder = [dataDir filesep includeRuns filesep caDir_allensdk filesep unitsFolder];
+    mainFolder = [outputDir filesep includeRuns filesep caDir_allensdk filesep unitsFolder];
     figFolder = [mainFolder filesep 'meanPhaseSums'];
     dataRegular = load([mainFolder filesep 'globalUnits_ca.mat']);
     dataReverse = load([mainFolder filesep 'globalUnits_ca_reverse.mat']);
@@ -563,7 +563,7 @@ elseif strcmp(repository,'allensdk')
   
   if strcmp(subpop, 'positive')
     opt.ylim = [-pi-pi/2 pi+pi/2];
-    mainFolder = [dataDir filesep includeRuns filesep caDir_allensdk_positive filesep unitsFolder];
+    mainFolder = [outputDir filesep includeRuns filesep caDir_allensdk_positive filesep unitsFolder];
     figFolder = [mainFolder filesep 'meanPhaseSums'];
     dataRegular = load([mainFolder filesep 'globalUnits_ca.mat']);
     dataReverse = load([mainFolder filesep 'globalUnits_ca_reverse.mat']);
@@ -628,7 +628,7 @@ elseif strcmp(repository,'allensdk')
   
   if strcmp(subpop, 'negative')
     opt.ylim = [-pi-pi/2 pi+pi/2];
-    mainFolder = [dataDir filesep includeRuns filesep caDir_allensdk_negative filesep unitsFolder];
+    mainFolder = [outputDir filesep includeRuns filesep caDir_allensdk_negative filesep unitsFolder];
     figFolder = [mainFolder filesep 'meanPhaseSums'];
     dataRegular = load([mainFolder filesep 'globalUnits_ca.mat']);
     dataReverse = load([mainFolder filesep 'globalUnits_ca_reverse.mat']);

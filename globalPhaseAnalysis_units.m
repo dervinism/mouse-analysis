@@ -24,7 +24,7 @@ params
 lists
 
 if ~exist('repository', 'var')
-  repository = 'all';
+  repository = 'uol';
 end
 if ~exist('subpop', 'var')
   subpop = 'all';
@@ -39,43 +39,48 @@ if ~exist('qualityCheck', 'var')
   qualityCheck = false;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep caDir];
-    rootFolder_la = [dataDir filesep laDir];
+    rootFolder = [outputDir filesep caDir];
+    rootFolder_la = [outputDir filesep laDir];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep caDir_positive];
-    rootFolder_la = [dataDir filesep laDir_positive];
+    rootFolder = [outputDir filesep caDir_positive];
+    rootFolder_la = [outputDir filesep laDir_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep caDir_negative];
-    rootFolder_la = [dataDir filesep laDir_negative];
+    rootFolder = [outputDir filesep caDir_negative];
+    rootFolder_la = [outputDir filesep laDir_negative];
   end
   animals = animalsOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep caDir_uol];
-    rootFolder_la = [dataDir filesep laDir_uol];
+    rootFolder = [outputDir filesep caDir_uol];
+    rootFolder_la = [outputDir filesep laDir_uol];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep caDir_uol_positive];
-    rootFolder_la = [dataDir filesep laDir_uol_positive];
+    rootFolder = [outputDir filesep caDir_uol_positive];
+    rootFolder_la = [outputDir filesep laDir_uol_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep caDir_uol_negative];
-    rootFolder_la = [dataDir filesep laDir_uol_negative];
+    rootFolder = [outputDir filesep caDir_uol_negative];
+    rootFolder_la = [outputDir filesep laDir_uol_negative];
   end
   animals = animalsUOLOI;
   xLim = freqLimUOL;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep caDir_allensdk];
-    rootFolder_la = [dataDir filesep laDir_allensdk];
+    rootFolder = [outputDir filesep caDir_allensdk];
+    rootFolder_la = [outputDir filesep laDir_allensdk];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep caDir_allensdk_positive];
-    rootFolder_la = [dataDir filesep laDir_allensdk_positive];
+    rootFolder = [outputDir filesep caDir_allensdk_positive];
+    rootFolder_la = [outputDir filesep laDir_allensdk_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep caDir_allensdk_negative];
-    rootFolder_la = [dataDir filesep laDir_allensdk_negative];
+    rootFolder = [outputDir filesep caDir_allensdk_negative];
+    rootFolder_la = [outputDir filesep laDir_allensdk_negative];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};
@@ -247,6 +252,24 @@ if fullRun
       % Test for exceptions
       if exceptionTest(except, seriesName1, seriesName2)
         continue
+      end
+
+      % Test if signed series data exist
+      if strcmp(subpop, 'all')
+        if isempty(dataStruct.seriesData.([animals{animal} '_s' seriesName1])) || ...
+            isempty(dataStruct.seriesData.([animals{animal} '_s' seriesName2]))
+          continue
+        end
+      elseif strcmp(subpop, 'positive')
+        if isempty(dataStruct.seriesData_positive.([animals{animal} '_s' seriesName1])) || ...
+            isempty(dataStruct.seriesData_positive.([animals{animal} '_s' seriesName2]))
+          continue
+        end
+      elseif strcmp(subpop, 'negative')
+        if isempty(dataStruct.seriesData_negative.([animals{animal} '_s' seriesName1])) || ...
+            isempty(dataStruct.seriesData_negative.([animals{animal} '_s' seriesName2]))
+          continue
+        end
       end
       
       % Determine if population rate > 0

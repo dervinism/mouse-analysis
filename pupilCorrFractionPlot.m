@@ -8,7 +8,7 @@ clearvars -except allData
 params
 lists
 
-repository = 'allensdk';
+repository = 'uol';
 unitThr = 10; % minimum unit or MUA count per data series
 alpha = 0.05; % significance level
 fullRun = 1; % 1 - all, 2 - bar and violin plots and correlation between fractions in different areas onwards, 3 - Correlation tables onwards
@@ -20,12 +20,12 @@ drawCorrs = false; % correlation between fractions in different areas
 drawTables = false; % correlation tables
 includeRuns = 'noRun';
 
-dataDir = [dataDir filesep includeRuns];
+dataDir = [dataDir_local filesep includeRuns];
 if strcmp(repository,'uol')
-  mainFolder = [dataDir filesep paDir_uol filesep 'all'];
+  mainFolder = [dataDir_local filesep paDir_uol filesep 'all'];
   animals = animalsUOLReduced; %animalsUOLOI;
 elseif strcmp(repository,'allensdk')
-  mainFolder = [dataDir filesep paDir_allensdk];
+  mainFolder = [dataDir_local filesep paDir_allensdk];
   animals = animalsAllensdk;
   conditions = {'awake'};
 end

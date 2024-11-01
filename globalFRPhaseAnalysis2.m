@@ -18,41 +18,46 @@ if ~exist('qualityCheck', 'var')
   qualityCheck = false;
 end
 
-dataDir = [dataDir filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
+if strcmp(repository,'uol')
+  dataDir = [dataDir_local filesep '001_uol'];
+elseif strcmp(repository,'allensdk')
+  dataDir = [dataDir_local filesep '002_allen'];
+end
 if strcmp(repository,'all')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir];
-    rootFolderEye = [dataDir filesep area2pupilDir];
+    rootFolder = [outputDir filesep laDir];
+    rootFolderEye = [outputDir filesep area2pupilDir];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_positive];
-    rootFolderEye = [dataDir filesep area2pupilDir_positive];
+    rootFolder = [outputDir filesep laDir_positive];
+    rootFolderEye = [outputDir filesep area2pupilDir_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_negative];
-    rootFolderEye = [dataDir filesep area2pupilDir_negative];
+    rootFolder = [outputDir filesep laDir_negative];
+    rootFolderEye = [outputDir filesep area2pupilDir_negative];
   end
   animals = animalsOI;
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_uol];
-    rootFolderEye = [dataDir filesep area2pupilDir_uol];
+    rootFolder = [outputDir filesep laDir_uol];
+    rootFolderEye = [outputDir filesep area2pupilDir_uol];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_uol_positive];
-    rootFolderEye = [dataDir filesep area2pupilDir_uol_positive];
+    rootFolder = [outputDir filesep laDir_uol_positive];
+    rootFolderEye = [outputDir filesep area2pupilDir_uol_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_uol_negative];
-    rootFolderEye = [dataDir filesep area2pupilDir_uol_negative];
+    rootFolder = [outputDir filesep laDir_uol_negative];
+    rootFolderEye = [outputDir filesep area2pupilDir_uol_negative];
   end
   animals = animalsUOLOI;
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_allensdk];
-    rootFolderEye = [dataDir filesep area2pupilDir_allensdk];
+    rootFolder = [outputDir filesep laDir_allensdk];
+    rootFolderEye = [outputDir filesep area2pupilDir_allensdk];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_allensdk_positive];
-    rootFolderEye = [dataDir filesep area2pupilDir_allensdk_positive];
+    rootFolder = [outputDir filesep laDir_allensdk_positive];
+    rootFolderEye = [outputDir filesep area2pupilDir_allensdk_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_allensdk_negative];
-    rootFolderEye = [dataDir filesep area2pupilDir_allensdk_negative];
+    rootFolder = [outputDir filesep laDir_allensdk_negative];
+    rootFolderEye = [outputDir filesep area2pupilDir_allensdk_negative];
   end
   animals = animalsAllensdk;
   conditions = {'awake'};
