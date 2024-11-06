@@ -35,7 +35,7 @@ else
   dbEntriesLocal = dbEntries;
 end
 for dbCount = dbEntriesLocal % Loop through db entries
-  splitType = 'coh'; % 'coh'; 'corr';
+  splitType = 'corr'; % 'coh'; 'corr';
   
   % Load the contents of dbStruct
   [dbStruct, repository, ~, entryName, ~, ~, shankIDs,...

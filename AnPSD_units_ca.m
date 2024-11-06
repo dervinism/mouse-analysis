@@ -62,6 +62,9 @@ for dbCount = dbEntries_cLocal % Loop through db entries (area 1)
     period = combinePeriods(period, dataStruct.runningSpeedData.(runningSpeedDataEntry).maxQuietPeriod, srData);
   end
   [inds1, spkDB] = determineInds(period, srData, MUAsAll);
+  if numel(shankIDs) > 1
+    spkDB = sum(spkDB);
+  end
   
   % Obtain population rate constructed from pure units only for the first series
     spkDB2 = [];

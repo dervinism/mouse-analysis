@@ -8,6 +8,7 @@ D = dir('M*_old.mat');
 dataFilename = D.name;
 oldDataContainer = load(dataFilename);
 dataStruct = oldDataContainer.dataStruct;
+vectorWise = true;
 
 % Loop over structure fields and update them
 fields = fieldnames(dataStruct);
@@ -21,7 +22,8 @@ for iField = 1:numel(fields)
         % Downsample unit data
         oldSR = oldDataContainer.dataStruct.(dataType).(dataFields{jField}).conf.samplingParams.srData;
         if oldSR > srData
-          if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
+          if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1) && ...
+            ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
               dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs = ...
                 resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs, ...
@@ -29,9 +31,12 @@ for iField = 1:numel(fields)
             end
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk)
               try
+                if vectorWise
+                  error('Skipping to processing by vectors');
+                end
                 dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk = ...
                   sparse(resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk, ...
-                  stepsize=1/oldSR, newStepsize=1/srData));
+                  stepsize=1/oldSR, newStepsize=1/srData)); %#ok<*UNRCH>
               catch
                 nUnits = size(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk,1);
                 for iUnit = 1:nUnits
@@ -59,6 +64,9 @@ for iField = 1:numel(fields)
             end
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).popData.spkDB)
               try
+                if vectorWise
+                  error('Skipping to processing by vectors');
+                end
                 dataStruct.(dataType).(dataFields{jField}).popData.spkDB = ...
                   sparse(resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).popData.spkDB, ...
                   stepsize=1/oldSR, newStepsize=1/srData));
@@ -106,7 +114,8 @@ for iField = 1:numel(fields)
         % Downsample unit data
         oldSR = oldDataContainer.dataStruct.(dataType).(dataFields{jField}).conf.samplingParams.srData;
         if oldSR > srData
-          if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
+          if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1) && ...
+            ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
               dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs = ...
                 resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs, ...
@@ -114,6 +123,9 @@ for iField = 1:numel(fields)
             end
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk)
               try
+                if vectorWise
+                  error('Skipping to processing by vectors');
+                end
                 dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk = ...
                   sparse(resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk, ...
                   stepsize=1/oldSR, newStepsize=1/srData));
@@ -144,6 +156,9 @@ for iField = 1:numel(fields)
             end
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).popData.spkDB)
               try
+                if vectorWise
+                  error('Skipping to processing by vectors');
+                end
                 dataStruct.(dataType).(dataFields{jField}).popData.spkDB = ...
                   sparse(resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).popData.spkDB, ...
                   stepsize=1/oldSR, newStepsize=1/srData));
@@ -191,7 +206,8 @@ for iField = 1:numel(fields)
         % Downsample unit data
         oldSR = oldDataContainer.dataStruct.(dataType).(dataFields{jField}).conf.samplingParams.srData;
         if oldSR > srData
-          if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
+          if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1) && ...
+            ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs)
               dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs = ...
                 resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.MUAs, ...
@@ -199,6 +215,9 @@ for iField = 1:numel(fields)
             end
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk)
               try
+                if vectorWise
+                  error('Skipping to processing by vectors');
+                end
                 dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk = ...
                   sparse(resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).shankData.shank1.spk, ...
                   stepsize=1/oldSR, newStepsize=1/srData));
@@ -229,6 +248,9 @@ for iField = 1:numel(fields)
             end
             if ~isempty(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).popData.spkDB)
               try
+                if vectorWise
+                  error('Skipping to processing by vectors');
+                end
                 dataStruct.(dataType).(dataFields{jField}).popData.spkDB = ...
                   sparse(resampleSpikeCounts(oldDataContainer.dataStruct.(dataType).(dataFields{jField}).popData.spkDB, ...
                   stepsize=1/oldSR, newStepsize=1/srData));
