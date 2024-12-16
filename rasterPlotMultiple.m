@@ -1,20 +1,25 @@
+%load('D:\infraslow-dynamics\04_data_analysis\001_uol\noRun\allData_uol.mat');
 clearvars -except allData
 
 repository = 'uol';
 opt.normType = 'regular';
 opt.srDataNew = 10;
 opt.rasterType = 'compressed';
+outputDir = 'D:\infraslow-dynamics\04_data_analysis\006_analysis_results\noRun\rasters';
+if ~exist(outputDir, 'dir')
+  mkdir(outputDir)
+end
 if strcmp(repository, 'uol')
   if strcmp(opt.normType, 'normalised')
-    opt.outputDir = 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\rasters\uol\Th+Cx+Hp_normalised';
+    opt.outputDir = fullfile(outputDir, 'uol\Th+Cx+Hp_normalised');
   else
-    opt.outputDir = 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\rasters\uol\Th+Cx+Hp';
+    opt.outputDir = fullfile(outputDir, 'uol\Th+Cx+Hp');
   end
-elseif strcmp(repository, 'allensdk')
+elseif strcmp(repository, 'allensdk') %#ok<*UNRCH>
   if strcmp(opt.normType, 'normalised')
-    opt.outputDir = 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\rasters\allen\Th+Cx+Hp_normalised';
+    opt.outputDir = fullfile(outputDir, 'allen\Th+Cx+Hp_normalised');
   else
-    opt.outputDir = 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\rasters\allen\Th+Cx+Hp';
+    opt.outputDir = fullfile(outputDir, 'allen\Th+Cx+Hp');
   end
 end
 
@@ -47,7 +52,7 @@ end
 
 
 %% Draw raster images
-for animal = 1:numel(animals) %[9 11]
+for animal = [9 11] %1:numel(animals) %[9 11] %4:numel(animals)
   if isfield(allData.(animals{animal}).dataStruct, 'eyeData')
     fnsData = fieldnames(allData.(animals{animal}).dataStruct.eyeData);
   else

@@ -1,3 +1,4 @@
+%load('D:\infraslow-dynamics\04_data_analysis\001_uol\noRun\allData_uol.mat');
 clearvars -except allData
 
 repository = 'uol';
@@ -63,10 +64,11 @@ series = {'201912022102051'; '2019120221020524'; '2019120221020556'; '2019120221
 
 opt.srDataNew = 10;
 opt.type = 'compressed';
-opt.outputDir = 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\rasters';
-opt.xLim = [0 817.891666666667]; %[0 817.891666666667]; %[817.891666666667 1635.78333333333]; [1635.78333333333 2453.675];
+opt.normType = 'normalised'; %'regular';
+opt.outputDir = 'D:\infraslow-dynamics\04_data_analysis\006_analysis_results\noRun\rasters';
+opt.xLim = [4000 4600]; %[0 817.891666666667]; %[817.891666666667 1635.78333333333]; [1635.78333333333 2453.675];
                                  %[2453.675 3271.56666666667]; [3271.56666666667 4089.45833333333]; [4089.45833333333 4907.35];
-opt.fraction = 0.1;
+%opt.fraction = 0.1;
 
 
 %% Get specific animal data

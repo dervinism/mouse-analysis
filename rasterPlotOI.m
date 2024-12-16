@@ -83,7 +83,7 @@ for dbCount = 1:numel(series)
   
   if isfield(dataStruct, 'seriesData_positive') && isfield(dataStruct.seriesData_positive, seriesName)
     dbStruct_positive = dataStruct.seriesData_positive.(seriesName);
-    if ~isempty(dbStruct_positive.popData.spkDB)
+    if ~isempty(dbStruct_positive) && ~isempty(dbStruct_positive.popData) && ~isempty(dbStruct_positive.popData.spkDB)
       [spkDB_positive, dsTimeNew] = downsampleRasterMatrix(full(dbStruct_positive.popData.spkDB), srData, srDataNew);
       if min(size(spkDB_positive)) == 1
         spkDB_positive = torow(spkDB_positive);
@@ -99,7 +99,7 @@ for dbCount = 1:numel(series)
   
   if isfield(dataStruct, 'seriesData_negative') && isfield(dataStruct.seriesData_negative, seriesName)
     dbStruct_negative = dataStruct.seriesData_negative.(seriesName);
-    if ~isempty(dbStruct_negative.popData.spkDB)
+    if ~isempty(dbStruct_negative) && ~isempty(dbStruct_negative.popData) && ~isempty(dbStruct_negative.popData.spkDB)
       [spkDB_negative, dsTimeNew] = downsampleRasterMatrix(full(dbStruct_negative.popData.spkDB), srData, srDataNew);
       if min(size(spkDB_negative)) == 1
         spkDB_negative = torow(spkDB_negative);
@@ -269,46 +269,47 @@ if ~exist(outputDir, 'file')
   mkdir(outputDir);
 end
 filename = [outputDir filesep filename];
-savefig(fH1, filename, 'compact');
+%savefig(fH1, filename, 'compact');
 print(gcf, [filename '.png'],'-dpng','-r300');
 
 
 %% Plot unit raster
-if isempty(spk) || min(size(spk)) == 1
-  fH2 = [];
-else
-  [~, iSort3] = sort(rSpearmanUnits, 'descend');
-  iSort3 = iSort3';
-  spkSorted = spk(iSort3,:);
-  if fraction < 0.5
-%     nTopUnits = round(numel(rSpearmanUnits)*fraction/2);
-%     spkSorted = spkSorted([1:nTopUnits end-nTopUnits+1:end],:);
-    nPositiveUnits = round(numel(unitsPos)*fraction);
-    nNegativeUnits = round(numel(unitsNeg)*fraction);
-    spkSorted = spkSorted([1:nPositiveUnits end-nNegativeUnits+1:end],:);
-  end
-  
-  opt.title = strrep(opt.title, 'Population', 'Unit');
-  if fraction < 0.5
-    opt.dividingLine = nPositiveUnits;
-  else
-    opt.dividingLine = numel(unitsPos);
-  end
-  opt.percentageStr = num2str(round(numel(unitsPos)/(numel(unitsPos) + numel(unitsNeg))*100, 2));
-  opt.yLabel = 'Units';
-  if strcmp(type, 'regular')
-    fH2 = rasterPlot(spkSorted, dsTime, opt);
-  elseif strcmp(type, 'compressed')
-    fH2 = rasterPlot(logical(spkSorted), dsTime, opt);
-  end
-  opt.title = [opt.title ' positivePercentage ' opt.percentageStr];
-  title(opt.title, 'Interpreter','None');
-  filename = strrep(opt.title, ' ', '_');
-  filename = strrep(filename, ':', '_');
-  filename = strrep(filename, '.', 'p');
-  filename = [outputDir filesep filename];
-  savefig(fH2, filename, 'compact');
-  print(gcf, [filename '.png'],'-dpng','-r300');
-end
-
-fH = {fH1, fH2};
+% if isempty(spk) || min(size(spk)) == 1
+%   fH2 = [];
+% else
+%   [~, iSort3] = sort(rSpearmanUnits, 'descend');
+%   iSort3 = iSort3';
+%   spkSorted = spk(iSort3,:);
+%   if fraction < 0.5
+% %     nTopUnits = round(numel(rSpearmanUnits)*fraction/2);
+% %     spkSorted = spkSorted([1:nTopUnits end-nTopUnits+1:end],:);
+%     nPositiveUnits = round(numel(unitsPos)*fraction);
+%     nNegativeUnits = round(numel(unitsNeg)*fraction);
+%     spkSorted = spkSorted([1:nPositiveUnits end-nNegativeUnits+1:end],:);
+%   end
+% 
+%   opt.title = strrep(opt.title, 'Population', 'Unit');
+%   if fraction < 0.5
+%     opt.dividingLine = nPositiveUnits;
+%   else
+%     opt.dividingLine = numel(unitsPos);
+%   end
+%   opt.percentageStr = num2str(round(numel(unitsPos)/(numel(unitsPos) + numel(unitsNeg))*100, 2));
+%   opt.yLabel = 'Units';
+%   if strcmp(type, 'regular')
+%     fH2 = rasterPlot(spkSorted, dsTime, opt);
+%   elseif strcmp(type, 'compressed')
+%     fH2 = rasterPlot(logical(spkSorted), dsTime, opt);
+%   end
+%   opt.title = [opt.title ' positivePercentage ' opt.percentageStr];
+%   title(opt.title, 'Interpreter','None');
+%   filename = strrep(opt.title, ' ', '_');
+%   filename = strrep(filename, ':', '_');
+%   filename = strrep(filename, '.', 'p');
+%   filename = [outputDir filesep filename];
+%   %savefig(fH2, filename, 'compact');
+%   print(gcf, [filename '.png'],'-dpng','-r300');
+% end
+% 
+% fH = {fH1, fH2};
+fH = fH1;

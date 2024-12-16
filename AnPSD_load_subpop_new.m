@@ -381,8 +381,10 @@ for dbCount = dbEntriesLocal % Loop through db entries
       dsTimes = [];
       for iCell = 1:numel(commonPeriod)
         [~, spkDB_ds_period] = determineInds(commonPeriod{iCell}, srData, spkDB);
-        [spkDB_ds_period, dsTimes_period] = downsampleRasterMatrix(full(spkDB_ds_period), srData, dr);
-        dsTimes_period = dsTimes_period - dsTimes_period(1)/2;
+        %[spkDB_ds_period, dsTimes_period] = downsampleRasterMatrix(full(spkDB_ds_period), srData, dr);
+        %dsTimes_period = dsTimes_period - dsTimes_period(1)/2;
+        [spkDB_ds_period, dsTimes_period] = resampleSpikeCounts( ...
+          full(spkDB_ds_period), stepsize=1/srData, newStepsize=1/dr);
         dsTimes_period = commonPeriod{iCell}(1) + dsTimes_period;
         if size(spkDB_ds_period,1) == 1 || size(spkDB_ds_period,2) == 1
           spkDB_ds_period = torow(spkDB_ds_period);
@@ -392,8 +394,10 @@ for dbCount = dbEntriesLocal % Loop through db entries
       end
     else
       [~, spkDB_ds] = determineInds(commonPeriod, srData, spkDB);
-      [spkDB_ds, dsTimes] = downsampleRasterMatrix(full(spkDB_ds), srData, dr);
-      dsTimes = dsTimes - dsTimes(1)/2;
+      %[spkDB_ds, dsTimes] = downsampleRasterMatrix(full(spkDB_ds), srData, dr);
+      %dsTimes = dsTimes - dsTimes(1)/2;
+      [spkDB_ds, dsTimes] = resampleSpikeCounts( ...
+        full(spkDB_ds), stepsize=1/srData, newStepsize=1/dr);
       dsTimes = commonPeriod(1) + dsTimes;
       if size(spkDB_ds,1) == 1 || size(spkDB_ds,2) == 1
         spkDB_ds = torow(spkDB_ds);
@@ -405,20 +409,21 @@ for dbCount = dbEntriesLocal % Loop through db entries
     pupilArea = interp1(areaTimes, pupilArea, dsTimes, 'linear','extrap');
     
     % Correlate down-sampled pupil and spiking signals
-    [rPearson, pvalPearson] = corrMulti(pupilArea, spkDB_ds, 'Pearson');
-    [rSpearman, pvalSpearman] = corrMulti(pupilArea, spkDB_ds, 'Spearman');
+    nonemptyInds = logical(sum(spkDB_ds));
+    [rPearson, pvalPearson] = corrMulti(pupilArea(nonemptyInds), spkDB_ds(:,nonemptyInds), 'Pearson');
+    [rSpearman, pvalSpearman] = corrMulti(pupilArea(nonemptyInds), spkDB_ds(:,nonemptyInds), 'Spearman');
     
     % Correlate down-sampled pupil and spiking signals based on the first 10% of the total signal duration
-    [rPearson10percent, pvalPearson10percent, rSpearman10percent, pvalSpearman10percent] = fractionCorrCalc(10, pupilArea, spkDB_ds);
+    [rPearson10percent, pvalPearson10percent, rSpearman10percent, pvalSpearman10percent] = fractionCorrCalc(10, pupilArea(nonemptyInds), spkDB_ds(:,nonemptyInds));
     
     % Correlate down-sampled pupil and spiking signals based on the first 25% of the total signal duration
-    [rPearson25percent, pvalPearson25percent, rSpearman25percent, pvalSpearman25percent] = fractionCorrCalc(4, pupilArea, spkDB_ds);
+    [rPearson25percent, pvalPearson25percent, rSpearman25percent, pvalSpearman25percent] = fractionCorrCalc(4, pupilArea(nonemptyInds), spkDB_ds(:,nonemptyInds));
     
     % Correlate down-sampled pupil and spiking signals based on the first 33% of the total signal duration
-    [rPearson33percent, pvalPearson33percent, rSpearman33percent, pvalSpearman33percent] = fractionCorrCalc(3, pupilArea, spkDB_ds);
+    [rPearson33percent, pvalPearson33percent, rSpearman33percent, pvalSpearman33percent] = fractionCorrCalc(3, pupilArea(nonemptyInds), spkDB_ds(:,nonemptyInds));
     
     % Correlate down-sampled pupil and spiking signals based on the first 50% of the total signal duration
-    [rPearson50percent, pvalPearson50percent, rSpearman50percent, pvalSpearman50percent] = fractionCorrCalc(2, pupilArea, spkDB_ds);
+    [rPearson50percent, pvalPearson50percent, rSpearman50percent, pvalSpearman50percent] = fractionCorrCalc(2, pupilArea(nonemptyInds), spkDB_ds(:,nonemptyInds));
     
     % Correlate down-sampled pupil and spiking signals over 10, 20, and 30-minute windows
     correlationWindowSize10min = floor(10*60*dr);
@@ -562,7 +567,9 @@ for dbCount = dbEntriesLocal % Loop through db entries
         spk_ds = [];
         for iCell = 1:numel(commonPeriod)
           [~, spk_ds_period] = determineInds(commonPeriod{iCell}, srData, spk);
-          spk_ds_period = downsampleRasterMatrix(full(spk_ds_period), srData, dr);
+          %spk_ds_period = downsampleRasterMatrix(full(spk_ds_period), srData, dr);
+          spkDB_ds_period = resampleSpikeCounts( ...
+            full(spk_ds_period), stepsize=1/srData, newStepsize=1/dr);
           if size(spk_ds_period,1) == 1 || size(spk_ds_period,2) == 1
             spk_ds_period = torow(spk_ds_period);
           end
@@ -570,7 +577,9 @@ for dbCount = dbEntriesLocal % Loop through db entries
         end
       else
         [~, spk_ds] = determineInds(commonPeriod, srData, spk);
-        spk_ds = downsampleRasterMatrix(full(spk_ds), srData, dr);
+        %spk_ds = downsampleRasterMatrix(full(spk_ds), srData, dr);
+        spkDB_ds = resampleSpikeCounts( ...
+          full(spk_ds), stepsize=1/srData, newStepsize=1/dr);
         if size(spk_ds,1) == 1 || size(spk_ds,2) == 1
           spk_ds = torow(spk_ds);
         end
@@ -578,22 +587,23 @@ for dbCount = dbEntriesLocal % Loop through db entries
       assert(size(spk_ds,1) == size(spk,1));
       
       % Correlate down-sampled pupil and spiking signals
-      [rPearsonUnits, pvalPearsonUnits] = corrMulti(pupilArea, spk_ds, 'Pearson');
-      [rSpearmanUnits, pvalSpearmanUnits] = corrMulti(pupilArea, spk_ds, 'Spearman');
+      nonemptyInds = logical(sum(spk_ds));
+      [rPearsonUnits, pvalPearsonUnits] = corrMulti(pupilArea(nonemptyInds), spk_ds(:,nonemptyInds), 'Pearson');
+      [rSpearmanUnits, pvalSpearmanUnits] = corrMulti(pupilArea(nonemptyInds), spk_ds(:,nonemptyInds), 'Spearman');
       assert(numel(rSpearmanUnits) == size(spk,1));
       assert(numel(rSpearmanUnits) == size(spk_ds,1));
       
       % Correlate down-sampled pupil and spiking signals based on the first 10% of the total signal duration
-      [rPearsonUnits10percent, pvalPearsonUnits10percent, rSpearmanUnits10percent, pvalSpearmanUnits10percent] = fractionCorrCalc(10, pupilArea, spk_ds);
+      [rPearsonUnits10percent, pvalPearsonUnits10percent, rSpearmanUnits10percent, pvalSpearmanUnits10percent] = fractionCorrCalc(10, pupilArea(nonemptyInds), spk_ds(:,nonemptyInds));
       
       % Correlate down-sampled pupil and spiking signals based on the first 25% of the total signal duration
-      [rPearsonUnits25percent, pvalPearsonUnits25percent, rSpearmanUnits25percent, pvalSpearmanUnits25percent] = fractionCorrCalc(4, pupilArea, spk_ds);
+      [rPearsonUnits25percent, pvalPearsonUnits25percent, rSpearmanUnits25percent, pvalSpearmanUnits25percent] = fractionCorrCalc(4, pupilArea(nonemptyInds), spk_ds(:,nonemptyInds));
       
       % Correlate down-sampled pupil and spiking signals based on the first 33% of the total signal duration
-      [rPearsonUnits33percent, pvalPearsonUnits33percent, rSpearmanUnits33percent, pvalSpearmanUnits33percent] = fractionCorrCalc(3, pupilArea, spk_ds);
+      [rPearsonUnits33percent, pvalPearsonUnits33percent, rSpearmanUnits33percent, pvalSpearmanUnits33percent] = fractionCorrCalc(3, pupilArea(nonemptyInds), spk_ds(:,nonemptyInds));
       
       % Correlate down-sampled pupil and spiking signals based on the first 50% of the total signal duration
-      [rPearsonUnits50percent, pvalPearsonUnits50percent, rSpearmanUnits50percent, pvalSpearmanUnits50percent] = fractionCorrCalc(2, pupilArea, spk_ds);
+      [rPearsonUnits50percent, pvalPearsonUnits50percent, rSpearmanUnits50percent, pvalSpearmanUnits50percent] = fractionCorrCalc(2, pupilArea(nonemptyInds), spk_ds(:,nonemptyInds));
       
       % Sort the spiking matrix based on the correlation coefficient values
       [sortedRUnits, iSortUnits] = sort(rSpearmanUnits, 'descend');

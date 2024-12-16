@@ -1,5 +1,5 @@
 repository = 'uol'; % 'uol' or 'allensdk'
-subpop = 'all'; %'all', 'positive', 'negative'
+subpop = 'negative'; %'all', 'positive', 'negative'
 fullRun = true; % Full data analyses (true) or only creating figures (false)
 includeRuns = 'noRun'; % 'run', 'noRun'
 
@@ -13,7 +13,7 @@ if ~exist('allData', 'var') && fullRun % load allData which contains full spikin
   end
 end
 
-% pupilCorrFractionPlot
+pupilCorrFractionPlot
 % pupilCorrFractionPlot2
 
 % reverse = false;

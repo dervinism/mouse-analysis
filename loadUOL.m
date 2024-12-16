@@ -1,7 +1,7 @@
 type = 'units';
-sourceDirNeuronexus = 'F:\infraslow-dynamics\04_data_analysis\001_uol';
-sourceDirNeuropixels = 'F:\infraslow-dynamics\04_data_analysis\001_uol';
-targetDir = 'D:\infraslow-dynamics\04_data_analysis\005_combined_datasets';
+sourceDirNeuronexus = 'D:\infraslow-dynamics\04_data_analysis\001_uol';
+sourceDirNeuropixels = 'D:\infraslow-dynamics\04_data_analysis\001_uol';
+targetDir = 'D:\infraslow-dynamics\04_data_analysis\001_uol\noRun';
 
 % UOL Neuronexus
 allData.M180313 = loadDataStruct([sourceDirNeuronexus filesep 'M180313\M180313.mat'], type);
