@@ -122,9 +122,13 @@ if iscell(FOI)
 else
   areaFOI = FOI;
 end
-[phaseMean, phaseCI95] = datamean(areaPhaseFOIindividual{iCond}{iArea}(inds,:), 'circularNP');
+phase = areaPhaseFOIindividual{iCond}{iArea}(inds,:);
+[phaseMean, phaseCI95] = datamean(phase, 'circularNP');
 % phaseCI95(phaseCI95 == 0) = NaN;
 % phaseMean(isnan(phaseCI95(1,:)) | isnan(phaseCI95(2,:))) = NaN;
+if size(phase,1) == 1
+  phaseCI95 = repmat([-pi; pi], 1, numel(phaseMean));
+end
 
 % Adjust the mean phase values
 if ~isempty(phaseMean) && sum(~isnan(phaseMean))

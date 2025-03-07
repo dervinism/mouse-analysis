@@ -35,7 +35,6 @@ else
   dbEntriesLocal = dbEntries;
 end
 for dbCount = dbEntriesLocal % Loop through db entries
-  splitType = 'corr'; % 'coh'; 'corr';
   
   % Load the contents of dbStruct
   [dbStruct, repository, ~, entryName, ~, ~, shankIDs,...
@@ -129,14 +128,9 @@ for dbCount = dbEntriesLocal % Loop through db entries
   
   % Check if eye data exists
   [seriesName, animal] = seriesFromEntry(entryName);
-  [breakClause, iCond] = series2condition(awake, anaesthesia, seriesName);
+  [breakClause, pupilCorrCond] = series2condition(awake, anaesthesia, seriesName);
   if breakClause
     continue
-  end
-  if strcmpi(splitType, 'coh') && iCond == 1
-    splitType = 'coh';
-  else
-    splitType = 'corr';
   end
   entryNameEye = [animal '_s' seriesName(1:min([14 numel(seriesName)]))];
   if ~isfield(dataStruct, 'eyeData') || ~isfield(dataStruct.eyeData, entryNameEye) ||...
@@ -154,7 +148,7 @@ for dbCount = dbEntriesLocal % Loop through db entries
     modeBoundaries = phaseHistoBinCentres(modesAllensdk{areaCode});
   end
   
-  if strcmpi(splitType, 'coh')
+  if strcmpi(pupilCorrCond, 'coh')
     % Get the mua phase
     phaseCoh = dbStruct.popData.pupil.phaseCoh.unitData;
     if isempty(phaseCoh)
@@ -300,7 +294,7 @@ for dbCount = dbEntriesLocal % Loop through db entries
     dbStruct_positive.conf = dbStruct.conf;
     dbStruct_positive.db = dbStruct.db;
     dbStruct_positive.dbSeries = dbStruct.dbSeries;
-    dbStruct_positive.splitType = splitType;
+    dbStruct_positive.splitType = pupilCorrCond;
     dataStruct.seriesData_positive.(entryName) = dbStruct_positive;
     
     dbStruct_negative.popData = struct('MUAsAll',full(MUAsAll_negative), 'spkDB',spkDB_negative,...
@@ -309,7 +303,7 @@ for dbCount = dbEntriesLocal % Loop through db entries
     dbStruct_negative.conf = dbStruct.conf;
     dbStruct_negative.db = dbStruct.db;
     dbStruct_negative.dbSeries = dbStruct.dbSeries;
-    dbStruct_negative.splitType = splitType;
+    dbStruct_negative.splitType = pupilCorrCond;
     dataStruct.seriesData_negative.(entryName) = dbStruct_negative;
     
     dataStruct.seriesData.(fnsData{dbCount}) = dbStruct;
@@ -796,7 +790,7 @@ for dbCount = dbEntriesLocal % Loop through db entries
     dbStruct_positive.conf.drData = dr;
     dbStruct_positive.db = dbStruct.db;
     dbStruct_positive.dbSeries = dbStruct.dbSeries;
-    dbStruct_positive.splitType = splitType;
+    dbStruct_positive.splitType = pupilCorrCond;
     dataStruct.seriesData_positive.(entryName) = dbStruct_positive;
     
     if ~isempty(units_negative)
@@ -818,7 +812,7 @@ for dbCount = dbEntriesLocal % Loop through db entries
     dbStruct_negative.conf.drData = dr;
     dbStruct_negative.db = dbStruct.db;
     dbStruct_negative.dbSeries = dbStruct.dbSeries;
-    dbStruct_negative.splitType = splitType;
+    dbStruct_negative.splitType = pupilCorrCond;
     dataStruct.seriesData_negative.(entryName) = dbStruct_negative;
     
 %     if ~isempty(units_neutral)

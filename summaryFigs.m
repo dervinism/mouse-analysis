@@ -1,5 +1,5 @@
 repository = 'uol'; % 'uol' or 'allensdk'
-subpop = 'negative'; %'all', 'positive', 'negative'
+subpop = 'positive'; %'all', 'positive', 'negative'
 fullRun = true; % Full data analyses (true) or only creating figures (false)
 includeRuns = 'noRun'; % 'run', 'noRun'
 

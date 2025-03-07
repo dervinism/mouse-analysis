@@ -1,9 +1,7 @@
 % Creates a database for a recording session.
 
 % Set the folder containing all of your animal recording data (top directory)
-%topDir = uolSourceDirNeuropixels;
-%topDir = allensdkSourceDir;
-topDir = iblSourceDir;
+topDir = uolSourceDirNeuropixels;
 
 % Animal's name or id
 animal = 'M191106_MD';

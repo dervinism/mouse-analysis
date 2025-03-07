@@ -253,13 +253,13 @@ if fullRun
       for sh = 1:numel(fieldnames(dbStruct.shankData))
         units = [units; dbStruct.shankData.(['shank' num2str(sh)]).units]; %#ok<*AGROW>
         if strcmpi(subpop, 'positive') || strcmpi(subpop, 'negative')
-          if iCond == 1
+          if pupilCorrCond == 1
             if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'pupil')
               continue
             else
               phase = [phase; spkPhase(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)'];
             end
-          elseif iCond == 2
+          elseif pupilCorrCond == 2
             if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'rSpearman')
               continue
             else
@@ -271,21 +271,21 @@ if fullRun
       if strcmp(subpop, 'all')
         correlatedInd = 1:numel(units);
       elseif strcmp(subpop, 'positive')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(1));
           phase = recentrePhase(phase, modeBoundaries(1));
           correlatedInd(phase > modeBoundaries(end) & phase <= modeBoundaries(2)) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman >= 0);
         end
       elseif strcmp(subpop, 'negative')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(3));
           phase = recentrePhase(phase, modeBoundaries(3));
           correlatedInd(phase > modeBoundaries(2) & phase <= modeBoundaries(end)) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman < 0);
         end
       end

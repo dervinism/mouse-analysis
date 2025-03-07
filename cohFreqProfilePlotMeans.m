@@ -89,6 +89,9 @@ for iCond = 1:min([2 numel(conditions)]) % Loop through conditions
       if ~isempty(areaCohFOIindividualPR)
         [cohMean_PR, cohCI95_PR] = datamean(areaCohFOIindividualPR{iCond}{options.iAreasOI(iArea)});
       end
+      if size(cohMean,1) == 1
+        cohCI95 = repmat([0; 1], 1, numel(cohMean));
+      end
       
       % Plot mean curves
       figure(fH{options.iAreasOI(iArea)}); hold on

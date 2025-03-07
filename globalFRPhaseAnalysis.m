@@ -66,7 +66,7 @@ elseif strcmp(repository,'allensdk')
 end
 
 significantUnits = false;
-crossValidation = false;
+crossValidation = true;
 crossValidationType = '50percent';
 predictionType = 1; % 1 - binned pre-fit, 2 - smooth post-fit
 distroType = 'skewnormal'; % 'gamma' or 'skewnormal'
@@ -455,14 +455,14 @@ if fullRun
             pvalSpearman = [pvalSpearman; dbStruct.shankData.(['shank' num2str(sh)]).pvalSpearman50percent(end,:)'];
           end
         else
-          if iCond == 1
+          if pupilCorrCond == 1
             if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'pupil')
               continue
             else
               phase = [phase; spkPhase(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)'];
               phaseSignificant = [phaseSignificant; ~isnan(spkPhaseSignificant(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)')];
             end
-          elseif iCond == 2
+          elseif pupilCorrCond == 2
             if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'rSpearman') || ...
                 isempty(dbStruct.shankData.(['shank' num2str(sh)]).rSpearman)
               continue
@@ -474,36 +474,36 @@ if fullRun
         end
       end
       if significantUnits
-        if iCond == 1
+        if pupilCorrCond == 1
           significantInd = phaseSignificant;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           significantInd = pvalSpearman < alpha;
         end
       else
-        if iCond == 1
+        if pupilCorrCond == 1
           significantInd = true(size(phaseSignificant));
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           significantInd = pvalSpearman <= 1;
         end
       end
       if strcmp(subpop, 'all')
         correlatedInd = 1:numel(units);
       elseif strcmp(subpop, 'positive')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(1));
           phase = recentrePhase(phase, modeBoundaries(1));
           correlatedInd(phase > modeBoundaries(end) & phase <= modeBoundaries(2)) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman >= 0);
         end
       elseif strcmp(subpop, 'negative')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(3));
           phase = recentrePhase(phase, modeBoundaries(3));
           correlatedInd(phase > modeBoundaries(2) & phase <= modeBoundaries(end)) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman < 0);
         end
       end
@@ -542,7 +542,7 @@ if fullRun
           for sh = 1:numel(shankIDs)
             if isempty(spk)
               spk = full(dbStruct.shankData.(shankIDs{sh}).spk);
-              if iCond == 1
+              if pupilCorrCond == 1
                 if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]),'pupil')
                   continue
                 end
@@ -554,7 +554,7 @@ if fullRun
                 rSpearman = spkCoh(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef);
                 rSpearman(negativeInd) = -rSpearman(negativeInd); % signed coherence rather than Spearman rho, so remember not to confuse
                 pvalSpearman = ~isnan(spkPhaseSignificant(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)');
-              elseif iCond == 2
+              elseif pupilCorrCond == 2
                 if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]),'rSpearman')...
                     || isempty(dbStruct.shankData.(shankIDs{sh}).rSpearman)
                   continue
@@ -564,7 +564,7 @@ if fullRun
               end
             else
               spk = concatenateMat(spk, full(dbStruct.shankData.(shankIDs{sh}).spk));
-              if iCond == 1
+              if pupilCorrCond == 1
                 phase = spkPhase(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)';
                 negativeInd = false(size(phase));
                 modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(3));
@@ -575,7 +575,7 @@ if fullRun
                 pvalSpearmanSh = ~isnan(spkPhaseSignificant(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)');
                 rSpearman = concatenateMat(rSpearman, rSpearmanSh);
                 pvalSpearman = concatenateMat(pvalSpearman, pvalSpearmanSh);
-              elseif iCond == 2
+              elseif pupilCorrCond == 2
                 rSpearman = concatenateMat(rSpearman, dbStruct.shankData.(shankIDs{sh}).rSpearman');
                 pvalSpearman = concatenateMat(pvalSpearman, dbStruct.shankData.(shankIDs{sh}).pvalSpearman');
               end
@@ -1164,85 +1164,85 @@ if drawMeans(1) || drawMeans(2)
     for iArea = 1:numel(iAreasOI)
       if size(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)},1) > 1
         if drawMeans(1)
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi
           %xTickLabels = {'0:\pi','\pi:2\pi'};
           xTickLabels = {'\pi:0','0:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPi{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiMeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond} '.fig'], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: 2*pi/3
           %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
           xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05Hz2piOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05Hz2PiOver3MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/2
           %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
           xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver2{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver2MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/3
           %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
           xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver3MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/4
           %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
           xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver4{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver4MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/6
           %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
           xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver6{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver6MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/8
           %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
           xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver8{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver8MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi
           %xTickLabels = {'0:\pi','\pi:2\pi'};
           xTickLabels = {'\pi:0','0:-\pi'};
           firingRateViolinPlot({'0:\pi','\pi:2\pi'}, getLog(areaFRFiltBP0p1to0p5HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPi{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiMeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: 2*pi/3
           %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
           xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5Hz2piOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5Hz2PiOver3MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/2
           %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
           xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver2{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver2MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/3
           %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
           xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver3MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/4
           %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
           xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver4{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver4MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/6
           %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
           xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
           firingRateViolinPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver6{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver6MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/8
           %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
           xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
@@ -1250,85 +1250,85 @@ if drawMeans(1) || drawMeans(2)
             statsMeanFRFiltBP0p1to0p5HzPiOver8{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver8MeanViolins_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
         end
         if drawMeans(2)
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi
           %xTickLabels = {'0:\pi','\pi:2\pi'};
           xTickLabels = {'\pi:0','0:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPi{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiMeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond} '.fig'], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: 2*pi/3
           %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
           xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05Hz2piOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05Hz2PiOver3MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/2
           %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
           xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver2{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver2MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/3
           %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
           xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver3MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/4
           %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
           xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver4{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver4MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/6
           %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
           xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver6{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver6MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/8
           %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
           xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p01to0p05HzPiOver8{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver8MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi
           %xTickLabels = {'0:\pi','\pi:2\pi'};
           xTickLabels = {'\pi:0','0:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPi{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiMeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: 2*pi/3
           %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
           xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5Hz2piOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5Hz2PiOver3MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/2
           %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
           xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver2{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver2MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/3
           %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
           xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver3MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/4
           %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
           xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver4{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver4MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/6
           %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
           xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
           firingRateDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
             statsMeanFRFiltBP0p1to0p5HzPiOver6{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver6MeanDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-          
+
           % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/8
           %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
           xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
@@ -1363,85 +1363,85 @@ if drawVars
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       if size(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)},1) > 1
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi
         %xTickLabels = {'0:\pi','\pi:2\pi'};
         xTickLabels = {'\pi:0','0:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05HzPi{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiVarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: 2*pi/3
         %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
         xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05Hz2piOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05Hz2PiOver3VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/2
         %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
         xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05HzPiOver2{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver2VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/3
         %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
         xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05HzPiOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver3VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/4
         %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
         xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05HzPiOver4{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver4VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/6
         %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
         xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05HzPiOver6{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver6VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/8
         %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
         xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p01to0p05HzPiOver8{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p01to0p05HzPiOver8VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi
         %xTickLabels = {'0:\pi','\pi:2\pi'};
         xTickLabels = {'\pi:0','0:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p1to0p5HzPi{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiVarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: 2*pi/3
         %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
         xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p1to0p5Hz2piOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5Hz2PiOver3VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/2
         %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
         xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p1to0p5HzPiOver2{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver2VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/3
         %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
         xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p1to0p5HzPiOver3{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver3VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/4
         %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
         xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p1to0p5HzPiOver4{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver4VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/6
         %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
         xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
         firingRateBarPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
           statsVarFRFiltBP0p1to0p5HzPiOver6{iCond}{iAreasOI(iArea)}, ['FiringRateFiltBP0p1to0p5HzPiOver6VarBars_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options);
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/8
         %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
         xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
@@ -1475,85 +1475,85 @@ if drawMeansVars
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       if size(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)},1) > 1
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi
         %xTickLabels = {'0:\pi','\pi:2\pi'};
         xTickLabels = {'\pi:0','0:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05HzPiMeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: 2*pi/3
         %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
         xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05Hz2piOver3MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/2
         %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
         xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05HzPiOver2MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/3
         %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
         xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05HzPiOver3MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/4
         %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
         xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05HzPiOver4MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/6
         %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
         xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05HzPiOver6MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.01-0.05 Hz: pi/8
         %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
         xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p01to0p05HzPiOver8MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi
         %xTickLabels = {'0:\pi','\pi:2\pi'};
         xTickLabels = {'\pi:0','0:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_pi{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p1to0p5HzPiMeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: 2*pi/3
         %xTickLabels = {'0:2\pi/3','2\pi/3:4\pi/3','4\pi/3:2\pi'};
         xTickLabels = {'\pi:\pi/3','\pi/3:-\pi/3','-\pi/3:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p1to0p5Hz2piOver3MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/2
         %xTickLabels = {'0:\pi/2','\pi/2:\pi','\pi:3\pi/2','3\pi/2:2\pi'};
         xTickLabels = {'\pi:\pi/2','\pi/2:0','0:-\pi/2','-\pi/2:-pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p1to0p5HzPiOver2MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/3
         %xTickLabels = {'0:\pi/3','\pi/3:2\pi/3','2\pi/3:\pi','\pi:4\pi/3','4\pi/3:5\pi/3','5\pi/3:2\pi'};
         xTickLabels = {'\pi:2\pi/3','2\pi/3:\pi/3','\pi/3:0','0:-\pi/3','-\pi/3:-2\pi/3','-2\pi/3:-pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver3{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p1to0p5HzPiOver3MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/4
         %xTickLabels = {'0:\pi/4','\pi/4:2\pi/4','2\pi/4:3\pi/4','3\pi/4:\pi','\pi:5\pi/4','5\pi/4:6\pi/4','6\pi/4:7\pi/4','7\pi/4:2\pi'};
         xTickLabels = {'\pi:3\pi/4','3\pi/4:\pi/2','\pi/2:\pi/4','\pi/4:0','0:-\pi/4','-\pi/4:-\pi/2','-\pi/2:-3\pi/4','-3\pi/4:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver4{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p1to0p5HzPiOver4MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/6
         %xTickLabels = {'0:\pi/6','\pi/6:2\pi/6','2\pi/6:3\pi/6','3\pi/6:4\pi/6','4\pi/6:5\pi/6','5\pi/6:\pi','\pi:7\pi/6','7\pi/6:8\pi/6','8\pi/6:9\pi/6','9\pi/6:10\pi/6','10\pi/6:11\pi/6','11\pi/6:2\pi'};
         xTickLabels = {'\pi:5\pi/6','5\pi/6:4\pi/6','4\pi/6:3\pi/6','3\pi/6:2\pi/6','2\pi/6:\pi/6','\pi/6:0','0:-\pi/6','-\pi/6:-2\pi/6','-2\pi/6:-3\pi/6','-3\pi/6:-4\pi/6','-4\pi/6:-5\pi/6','-5\pi/6:-\pi'};
         firingRateCombinedDotPlot(xTickLabels, getLog(areaFRFiltBP0p1to0p5HzIndividual_piOver6{iCond}{iAreasOI(iArea)}),...
           ['FiringRateFiltBP0p1to0p5HzPiOver6MeanVarDots_' areas{iAreasOI(iArea)} '_' conditions{iCond}], options)
-        
+
         % Band-pass filtered with a bandwidth of 0.1-0.5 Hz: pi/8
         %xTickLabels = {'0:\pi/8','\pi/8:2\pi/8','2\pi/8:3\pi/8','3\pi/8:4\pi/8','4\pi/8:5\pi/8','5\pi/8:6\pi/8','6\pi/8:7\pi/8','7\pi/8:\pi','\pi:9\pi/8','9\pi/8:10\pi/8','10\pi/8:11\pi/8','11\pi/8:12\pi/8','12\pi/8:13\pi/8','13\pi/8:14\pi/8','14\pi/8:15\pi/8','15\pi/8:2\pi'};
         xTickLabels = {'\pi:7\pi/8','7\pi/8:6\pi/8','6\pi/8:5\pi/8','5\pi/8:4\pi/8','4\pi/8:3\pi/8','3\pi/8:2\pi/8','2\pi/8:\pi/8','\pi/8:0','0:-\pi/8','-\pi/8:-2\pi/8','-2\pi/8:-3\pi/8','-3\pi/8:-4\pi/8','-4\pi/8:-5\pi/8','-5\pi/8:-6\pi/8','-6\pi/8:-7\pi/8','-7\pi/8:-\pi'};
@@ -1571,10 +1571,10 @@ if drawModulationDistros
   options.pdf = true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
-      
+
       % 50 cent
       if ~isempty(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations
         frModulations = areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1);
         nBins = 96;
@@ -1589,7 +1589,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1));
         nBins = nBins/2;
@@ -1604,7 +1604,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Signed normalised modulations
         frModulations = (areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         nBins = 96;
@@ -1619,7 +1619,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned normalised modulations
         frModulations = abs((areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)});
         nBins = nBins/2;
@@ -1635,10 +1635,10 @@ if drawModulationDistros
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
       end
-      
+
       % 25 cent
       if ~isempty(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations
         frModulations = areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1);
         nBins = 96;
@@ -1653,7 +1653,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1));
         nBins = nBins/2;
@@ -1668,7 +1668,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Signed normalised modulations
         frModulations = (areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         nBins = 96;
@@ -1683,7 +1683,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs((areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)});
         nBins = nBins/2;
@@ -1699,10 +1699,10 @@ if drawModulationDistros
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
       end
-      
+
       % 12.5 cent
       if ~isempty(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations
         frModulations = areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1);
         nBins = 96;
@@ -1717,7 +1717,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1));
         nBins = nBins/2;
@@ -1732,7 +1732,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Signed normalised modulations
         frModulations = (areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         nBins = 96;
@@ -1747,7 +1747,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs((areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)});
         nBins = nBins/2;
@@ -1763,10 +1763,10 @@ if drawModulationDistros
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
       end
-      
+
       % 33.33 cent
       if ~isempty(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations
         frModulations = areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1);
         nBins = 96;
@@ -1781,7 +1781,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1));
         nBins = nBins/2;
@@ -1796,7 +1796,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Signed normalised modulations
         frModulations = (areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         nBins = 96;
@@ -1811,7 +1811,7 @@ if drawModulationDistros
         options.splitModes = false;
         options.dataScatter = [];
         histPlot(edges, frModulations, options);
-        
+
         % Unsigned modulations
         frModulations = abs((areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)});
         nBins = nBins/2;
@@ -1864,10 +1864,10 @@ if drawCorrelations
       options2.colourCodes(2,:) = [255 128 128]./255; % Light red
       options2.colourCodes(3,:) = matlabColours(8); % Blue
       options2.colourCodes(4,:) = [128 128 255]./255; % Light blue
-      
+
       % 50 cent
       if ~isempty(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1);
         options2.figTitle = ['Unit firing rate vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1877,7 +1877,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedModulation50{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1886,7 +1886,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1896,7 +1896,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedModulation50{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1905,7 +1905,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         options2.figTitle = ['Unit firing rate vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1915,7 +1915,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedNormalisedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1924,7 +1924,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1934,7 +1934,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedNormalisedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1943,7 +1943,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit firing rate associated to constricted pupil phase vs unit firing rate associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frConstrictedVsfrDilated50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1953,10 +1953,10 @@ if drawCorrelations
         [~, rCoefFRConstrictedVsFRDilated50{iCond}{iAreasOI(iArea)}, pvalFRConstrictedVsFRDilated50{iCond}{iAreasOI(iArea)},...
           modelFRConstrictedVsFRDilated50{iCond}{iAreasOI(iArea)}] = corrPlot(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(inds,1), areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(inds,end), options2);
       end
-      
+
       % 25 cent
       if ~isempty(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1);
         options2.figTitle = ['Unit firing rate vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1966,7 +1966,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedModulation25{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1975,7 +1975,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1985,7 +1985,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedModulation25{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -1994,7 +1994,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         options2.figTitle = ['Unit firing rate vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2004,7 +2004,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedNormalisedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2013,7 +2013,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2023,7 +2023,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedNormalisedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2032,7 +2032,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit firing rate associated to constricted pupil phase vs unit firing rate associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frConstrictedVsfrDilated25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2042,10 +2042,10 @@ if drawCorrelations
         [~, rCoefFRConstrictedVsFRDilated25{iCond}{iAreasOI(iArea)}, pvalFRConstrictedVsFRDilated25{iCond}{iAreasOI(iArea)},...
           modelFRConstrictedVsFRDilated25{iCond}{iAreasOI(iArea)}] = corrPlot(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(inds,1), areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(inds,end), options2);
       end
-      
+
       % 12.5 cent
       if ~isempty(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1);
         options2.figTitle = ['Unit firing rate vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2055,7 +2055,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2064,7 +2064,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2074,7 +2074,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2083,7 +2083,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         options2.figTitle = ['Unit firing rate vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2093,7 +2093,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedNormalisedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2102,7 +2102,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2112,7 +2112,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedNormalisedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2121,7 +2121,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit firing rate associated to constricted pupil phase vs unit firing rate associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frConstrictedVsfrDilated12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2131,10 +2131,10 @@ if drawCorrelations
         [~, rCoefFRConstrictedVsFRDilated12p5{iCond}{iAreasOI(iArea)}, pvalFRConstrictedVsFRDilated12p5{iCond}{iAreasOI(iArea)},...
           modelFRConstrictedVsFRDilated12p5{iCond}{iAreasOI(iArea)}] = corrPlot(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(inds,1), areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(inds,end), options2);
       end
-      
+
       % 33.33 cent
       if ~isempty(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1);
         options2.figTitle = ['Unit firing rate vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2144,7 +2144,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2153,7 +2153,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2163,7 +2163,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2172,7 +2172,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1))./areaFRIndividual{iCond}{iAreasOI(iArea)};
         options2.figTitle = ['Unit firing rate vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2182,7 +2182,7 @@ if drawCorrelations
         options2.axesType = 'semilogx';
         [~, rCoefFRVsFRSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRVsFRSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRVsFRSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrSignedNormalisedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2191,7 +2191,7 @@ if drawCorrelations
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit firing rate vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2201,7 +2201,7 @@ if drawCorrelations
         options2.axesType = 'loglog';
         [~, rCoefFRVsFRUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRVsFRUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRVsFRUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute firing rate modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrUnsignedNormalisedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2210,7 +2210,7 @@ if drawCorrelations
         options2.axesType = 'semilogy';
         [~, rCoefrSpearman5secVsFRUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit firing rate associated to constricted pupil phase vs unit firing rate associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frConstrictedVsfrDilatedThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2220,7 +2220,7 @@ if drawCorrelations
         [~, rCoefFRConstrictedVsFRDilatedThird{iCond}{iAreasOI(iArea)}, pvalFRConstrictedVsFRDilatedThird{iCond}{iAreasOI(iArea)},...
           modelFRConstrictedVsFRDilatedThird{iCond}{iAreasOI(iArea)}] = corrPlot(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(inds,1), areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(inds,end), options2);
       end
-      
+
       % Firing rate: r
       options2.figTitle = ['Unit rCoef over 5sec bins vs firing rate in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
       options2.figName = ['rSpearman5secVsfr in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2229,7 +2229,7 @@ if drawCorrelations
       options2.axesType = 'semilogy';
       [~, rCoefrSpearman5secVsFR{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFR{iCond}{iAreasOI(iArea)},...
         modelrSpearman5secVsFR{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), fr(inds), options2);
-      
+
       % Firing rate: unsigned r
       options2.figTitle = ['Unit rCoef over 5sec bins vs firing rate in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
       options2.figName = ['rSpearmanUnsigned5secVsfr in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2240,7 +2240,7 @@ if drawCorrelations
         modelrSpearmanUnsigned5secVsFR{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), fr(inds), options2);
     end
   end
-  
+
   % Save correlation data
   save(filename, 'rCoefFRVsFRSignedModulation50','pvalFRVsFRSignedModulation50','rCoefrSpearman5secVsFRSignedModulation50','pvalrSpearman5secVsFRSignedModulation50',...
     'rCoefFRVsFRUnsignedModulation50','pvalFRVsFRUnsignedModulation50','rCoefrSpearman5secVsFRUnsignedModulation50','pvalrSpearman5secVsFRUnsignedModulation50',...
@@ -2306,10 +2306,10 @@ if drawCorrelationsLog
       options2.colourCodes(2,:) = [255 128 128]./255; % Light red
       options2.colourCodes(3,:) = matlabColours(8); % Blue
       options2.colourCodes(4,:) = [128 128 255]./255; % Light blue
-      
+
       % 50 cent
       if ~isempty(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1));
         options2.figTitle = ['Unit log10(firing rate) vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2319,7 +2319,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2328,7 +2328,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2338,7 +2338,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulation50{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = getLog(abs(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1)));
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedModulation50_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2347,7 +2347,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulation50_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulation50_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulation50_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2356,7 +2356,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(:,1)))./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2366,7 +2366,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedNormalisedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2375,7 +2375,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2385,7 +2385,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = frModulations2./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedNormalisedModulation50_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2394,7 +2394,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulation50_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulation50_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulation50_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedNormalisedModulation50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2403,7 +2403,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedNormalisedModulation50{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit log10(firing rate) associated to constricted pupil phase vs unit log10(firing rate) associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogConstrictedVsfrLogDilated50 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2413,10 +2413,10 @@ if drawCorrelationsLog
         [~, rCoefFRLogConstrictedVsFRLogDilated50{iCond}{iAreasOI(iArea)}, pvalFRLogConstrictedVsFRLogDilated50{iCond}{iAreasOI(iArea)},...
           modelFRLogConstrictedVsFRLogDilated50{iCond}{iAreasOI(iArea)}] = corrPlot(getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(inds,1)), getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(inds,end)), options2);
       end
-      
+
       % 25 cent
       if ~isempty(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1));
         options2.figTitle = ['Unit log10(firing rate) vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2426,7 +2426,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2435,7 +2435,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2445,7 +2445,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulation25{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = getLog(abs(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1)));
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedModulation25_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2454,7 +2454,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulation25_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulation25_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulation25_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2463,7 +2463,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(:,1)))./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2473,7 +2473,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedNormalisedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2482,7 +2482,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2492,7 +2492,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = frModulations2./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedNormalisedModulation25_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2501,7 +2501,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulation25_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulation25_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulation25_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedNormalisedModulation25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2510,7 +2510,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedNormalisedModulation25{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit log10(firing rate) associated to constricted pupil phase vs unit log10(firing rate) associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogConstrictedVsfrLogDilated25 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2520,10 +2520,10 @@ if drawCorrelationsLog
         [~, rCoefFRLogConstrictedVsFRLogDilated25{iCond}{iAreasOI(iArea)}, pvalFRLogConstrictedVsFRLogDilated25{iCond}{iAreasOI(iArea)},...
           modelFRLogConstrictedVsFRLogDilated25{iCond}{iAreasOI(iArea)}] = corrPlot(getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(inds,1)), getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(inds,end)), options2);
       end
-      
+
       % 12.5 cent
       if ~isempty(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1));
         options2.figTitle = ['Unit log10(firing rate) vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2533,7 +2533,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2542,7 +2542,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2552,7 +2552,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = getLog(abs(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1)));
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedModulation12p5_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2561,7 +2561,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulation12p5_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulation12p5_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulation12p5_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2570,7 +2570,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(:,1)))./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2580,7 +2580,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedNormalisedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2589,7 +2589,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2599,7 +2599,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = frModulations2./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedNormalisedModulation12p5_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2608,7 +2608,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulation12p5_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulation12p5_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulation12p5_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedNormalisedModulation12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2617,7 +2617,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedNormalisedModulation12p5{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit log10(firing rate) associated to constricted pupil phase vs unit log10(firing rate) associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogConstrictedVsfrLogDilated12p5 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2627,10 +2627,10 @@ if drawCorrelationsLog
         [~, rCoefFRLogConstrictedVsFRLogDilated12p5{iCond}{iAreasOI(iArea)}, pvalFRLogConstrictedVsFRLogDilated12p5{iCond}{iAreasOI(iArea)},...
           modelFRLogConstrictedVsFRLogDilated12p5{iCond}{iAreasOI(iArea)}] = corrPlot(getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(inds,1)), getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(inds,end)), options2);
       end
-      
+
       % 33.33 cent
       if ~isempty(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)})
-        
+
         % Signed modulations: Firing rate
         frModulations = getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1));
         options2.figTitle = ['Unit log10(firing rate) vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2640,7 +2640,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2649,7 +2649,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2659,7 +2659,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = getLog(abs(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end) - areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1)));
         options2.figTitle = ['Unit log10(firing rate) vs absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedModulationThird_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2668,7 +2668,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedModulationThird_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedModulationThird_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedModulationThird_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2677,7 +2677,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: Firing rate
         frModulations = (getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,end)) - getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(:,1)))./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2687,7 +2687,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         % Signed normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogSignedNormalisedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2696,7 +2696,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogSignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), frModulations(inds), options2);
-        
+
         % Unsigned normalised modulations: Firing rate
         frModulations = abs(frModulations);
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2706,7 +2706,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations(inds), options2);
-        
+
         frModulations2 = frModulations2./getLog(areaFRIndividual{iCond}{iAreasOI(iArea)});
         options2.figTitle = ['Unit log10(firing rate) vs normalised absolute log10(firing rate modulation) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogVsfrLogUnsignedNormalisedModulationThird_2 in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2715,7 +2715,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefFRLogVsFRLogUnsignedNormalisedModulationThird_2{iCond}{iAreasOI(iArea)}, pvalFRLogVsFRLogUnsignedNormalisedModulationThird_2{iCond}{iAreasOI(iArea)},...
           modelFRLogVsFRLogUnsignedNormalisedModulationThird_2{iCond}{iAreasOI(iArea)}] = corrPlot(fr(inds), frModulations2(inds), options2);
-        
+
         % Unsigned normalised modulations: r
         options2.figTitle = ['Unit rCoef over 5sec bins vs normalised absolute log10(firing rate) modulation in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['rSpearman5secVsfrLogUnsignedNormalisedModulationThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2724,7 +2724,7 @@ if drawCorrelationsLog
         options2.axesType = 'regular';
         [~, rCoefrSpearman5secVsFRLogUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLogUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)},...
           modelrSpearman5secVsFRLogUnsignedNormalisedModulationThird{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), frModulations(inds), options2);
-        
+
         % Firing rate: constricted vs dilated pupil
         options2.figTitle = ['Unit log10(firing rate) associated to constricted pupil phase vs unit log10(firing rate) associated to dilated pupil phase in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
         options2.figName = ['frLogConstrictedVsfrLogDilatedThird in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2734,7 +2734,7 @@ if drawCorrelationsLog
         [~, rCoefFRLogConstrictedVsFRLogDilatedThird{iCond}{iAreasOI(iArea)}, pvalFRLogConstrictedVsFRLogDilatedThird{iCond}{iAreasOI(iArea)},...
           modelFRLogConstrictedVsFRLogDilatedThird{iCond}{iAreasOI(iArea)}] = corrPlot(getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(inds,1)), getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(inds,end)), options2);
       end
-      
+
       % Firing rate: r
       options2.figTitle = ['Unit rCoef over 5sec bins vs log10(firing rate) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
       options2.figName = ['rSpearman5secVsfrLog in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2743,7 +2743,7 @@ if drawCorrelationsLog
       options2.axesType = 'regular';
       [~, rCoefrSpearman5secVsFRLog{iCond}{iAreasOI(iArea)}, pvalrSpearman5secVsFRLog{iCond}{iAreasOI(iArea)},...
         modelrSpearman5secVsFRLog{iCond}{iAreasOI(iArea)}] = corrPlot(rSpearman(inds), fr(inds), options2);
-      
+
       % Firing rate: unsigned r
       options2.figTitle = ['Unit rCoef over 5sec bins vs log10(firing rate) in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
       options2.figName = ['rSpearmanUnsigned5secVsfrLog in ' areas{iAreasOI(iArea)} ' during ' conditions{iCond}];
@@ -2754,7 +2754,7 @@ if drawCorrelationsLog
         modelrSpearmanUnsigned5secVsFRLog{iCond}{iAreasOI(iArea)}] = corrPlot(abs(rSpearman(inds)), fr(inds), options2);
     end
   end
-  
+
   % Save correlation data
   save(filename, 'rCoefFRLogVsFRLogSignedModulation50','pvalFRLogVsFRLogSignedModulation50','rCoefrSpearman5secVsFRLogSignedModulation50','pvalrSpearman5secVsFRLogSignedModulation50',...
     'rCoefFRLogVsFRLogUnsignedModulation50','pvalFRLogVsFRLogUnsignedModulation50','rCoefrSpearman5secVsFRLogUnsignedModulation50','pvalrSpearman5secVsFRLogUnsignedModulation50',...
@@ -2839,25 +2839,25 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
               fractions = [fractions; sum(unitInds & rSpearman >= 0)/sum(unitInds)];
               colourVector = [colourVector; colourCount];
               colourCodes = [colourCodes; areaColours2(areaName)];
-              
+
               % 50 cent
               dilatedFR = getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(unitInds,end));
               constrictedFR = getLog(areaFRPercentileIndividual_50{iCond}{iAreasOI(iArea)}(unitInds,1));
               meanModulations50 = [meanModulations50; mean(dilatedFR - constrictedFR)];
               varModulations50 = [varModulations50; var(dilatedFR) - var(constrictedFR)];
-              
+
               % 25 cent
               dilatedFR = getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(unitInds,end));
               constrictedFR = getLog(areaFRPercentileIndividual_25{iCond}{iAreasOI(iArea)}(unitInds,1));
               meanModulations25 = [meanModulations25; mean(dilatedFR - constrictedFR)];
               varModulations25 = [varModulations25; var(dilatedFR) - var(constrictedFR)];
-              
+
               % 12.5 cent
               dilatedFR = getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(unitInds,end));
               constrictedFR = getLog(areaFRPercentileIndividual_12p5{iCond}{iAreasOI(iArea)}(unitInds,1));
               meanModulations12p5 = [meanModulations12p5; mean(dilatedFR - constrictedFR)];
               varModulations12p5 = [varModulations12p5; var(dilatedFR) - var(constrictedFR)];
-              
+
               % 33.33 cent
               dilatedFR = getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(unitInds,end));
               constrictedFR = getLog(areaFRPercentileIndividual_third{iCond}{iAreasOI(iArea)}(unitInds,1));
@@ -2871,7 +2871,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options.colourVector = colourVector;
     options.colourCodes = unique(colourCodes,'rows');
     options2 = options;
-    
+
     % 50 cent
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) mean modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedMeanModulation50 during ' conditions{iCond}];
@@ -2880,7 +2880,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedMeanModulation50{iCond}, pvalPositiveFractionVsFRLogSignedMeanModulation50{iCond},...
       modelPositiveFractionVsFRLogSignedMeanModulation50{iCond}] = corrPlot(fractions, meanModulations50, options2);
-    
+
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) variance modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedVarModulation50 during ' conditions{iCond}];
     options2.xLabel = 'Fraction of positive units';
@@ -2888,7 +2888,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedVarModulation50{iCond}, pvalPositiveFractionVsFRLogSignedVarModulation50{iCond},...
       modelPositiveFractionVsFRLogSignedVarModulation50{iCond}] = corrPlot(fractions, varModulations50, options2);
-    
+
     % 25 cent
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) mean modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedMeanModulation25 during ' conditions{iCond}];
@@ -2897,7 +2897,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedMeanModulation25{iCond}, pvalPositiveFractionVsFRLogSignedMeanModulation25{iCond},...
       modelPositiveFractionVsFRLogSignedMeanModulation25{iCond}] = corrPlot(fractions, meanModulations25, options2);
-    
+
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) variance modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedVarModulation25 during ' conditions{iCond}];
     options2.xLabel = 'Fraction of positive units';
@@ -2905,7 +2905,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedVarModulation25{iCond}, pvalPositiveFractionVsFRLogSignedVarModulation25{iCond},...
       modelPositiveFractionVsFRLogSignedVarModulation25{iCond}] = corrPlot(fractions, varModulations25, options2);
-    
+
     % 12.5 cent
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) mean modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedMeanModulation12p5 during ' conditions{iCond}];
@@ -2914,7 +2914,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedMeanModulation12p5{iCond}, pvalPositiveFractionVsFRLogSignedMeanModulation12p5{iCond},...
       modelPositiveFractionVsFRLogSignedMeanModulation12p5{iCond}] = corrPlot(fractions, meanModulations12p5, options2);
-    
+
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) variance modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedVarModulation12p5 during ' conditions{iCond}];
     options2.xLabel = 'Fraction of positive units';
@@ -2922,7 +2922,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedVarModulation12p5{iCond}, pvalPositiveFractionVsFRLogSignedVarModulation12p5{iCond},...
       modelPositiveFractionVsFRLogSignedVarModulation12p5{iCond}] = corrPlot(fractions, varModulations12p5, options2);
-    
+
     % 33.33 cent
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) mean modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedMeanModulationThird during ' conditions{iCond}];
@@ -2931,7 +2931,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     options2.axesType = 'regular';
     [~, rCoefPositiveFractionVsFRLogSignedMeanModulationThird{iCond}, pvalPositiveFractionVsFRLogSignedMeanModulationThird{iCond},...
       modelPositiveFractionVsFRLogSignedMeanModulationThird{iCond}] = corrPlot(fractions, meanModulationsThird, options2);
-    
+
     options2.figTitle = ['Fraction of positive units vs log10(firing rate) variance modulation during ' conditions{iCond}];
     options2.figName = ['positiveFractionVsfrLogSignedVarModulationThird during ' conditions{iCond}];
     options2.xLabel = 'Fraction of positive units';
@@ -2940,7 +2940,7 @@ if drawCorrelationsLog2 && strcmp(subpop, 'all')
     [~, rCoefPositiveFractionVsFRLogSignedVarModulationThird{iCond}, pvalPositiveFractionVsFRLogSignedVarModulationThird{iCond},...
       modelPositiveFractionVsFRLogSignedVarModulationThird{iCond}] = corrPlot(fractions, varModulationsThird, options2);
   end
-  
+
   % Save correlation data
   save(filename, 'rCoefPositiveFractionVsFRLogSignedMeanModulation50','pvalPositiveFractionVsFRLogSignedMeanModulation50','modelPositiveFractionVsFRLogSignedMeanModulation50',...
     'rCoefPositiveFractionVsFRLogSignedMeanModulation25','pvalPositiveFractionVsFRLogSignedMeanModulation25','modelPositiveFractionVsFRLogSignedMeanModulation25',...
@@ -2976,25 +2976,25 @@ if drawPredictions
       for iArea = 1:numel(iAreasOI)
         if ~isempty(areaFRIndividual{iCond}{iAreasOI(iArea)})
           frData = areaFRIndividual{iCond}{iAreasOI(iArea)};
-          
+
           % 50 cent
           options.figName = ['FiringRateCentile50Predicted_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:50 cent predicted','50:100 cent predicted'};
           model = modelFRLogVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)};
           [~, predictions50{iCond}{iAreasOI(iArea)}] = firingRatePredictPlot(edges, centres, x, frData, model, options);
-          
+
           % 25 cent
           options.figName = ['FiringRateCentile25Predicted_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:25 cent predicted','75:100 cent predicted'};
           model = modelFRLogVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)};
           [~, predictions25{iCond}{iAreasOI(iArea)}] = firingRatePredictPlot(edges, centres, x, frData, model, options);
-          
+
           % 12.5 cent
           options.figName = ['FiringRateCentile12p5Predicted_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:12.5 cent predicted','87.5:100 cent predicted'};
           model = modelFRLogVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)};
           [~, predictions12p5{iCond}{iAreasOI(iArea)}] = firingRatePredictPlot(edges, centres, x, frData, model, options);
-          
+
           % 33.33 cent
           options.figName = ['FiringRateCentileThirdPredicted_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:33.3 cent predicted','66.7:100 cent predicted'};
@@ -3009,25 +3009,25 @@ if drawPredictions
       for iArea = 1:numel(iAreasOI)
         if ~isempty(areaFRIndividual{iCond}{iAreasOI(iArea)})
           frData = areaFRIndividual{iCond}{iAreasOI(iArea)};
-          
+
           % 50 cent
           options.figName = ['FiringRateCentile50Predicted2_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:50 cent predicted','50:100 cent predicted'};
           model = modelFRLogVsFRLogSignedModulation50{iCond}{iAreasOI(iArea)};
           [~, predictions50_2{iCond}{iAreasOI(iArea)}] = firingRatePredictPlot2(edges, centres, x, frData, model, options);
-          
+
           % 25 cent
           options.figName = ['FiringRateCentile25Predicted2_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:25 cent predicted','75:100 cent predicted'};
           model = modelFRLogVsFRLogSignedModulation25{iCond}{iAreasOI(iArea)};
           [~, predictions25_2{iCond}{iAreasOI(iArea)}] = firingRatePredictPlot2(edges, centres, x, frData, model, options);
-          
+
           % 12.5 cent
           options.figName = ['FiringRateCentile12p5Predicted2_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:12.5 cent predicted','87.5:100 cent predicted'};
           model = modelFRLogVsFRLogSignedModulation12p5{iCond}{iAreasOI(iArea)};
           [~, predictions12p5_2{iCond}{iAreasOI(iArea)}] = firingRatePredictPlot2(edges, centres, x, frData, model, options);
-          
+
           % 33.33 cent
           options.figName = ['FiringRateCentileThirdPredicted2_' distroType '_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
           options.legendLabels = {'0:33.3 cent predicted','66.7:100 cent predicted'};

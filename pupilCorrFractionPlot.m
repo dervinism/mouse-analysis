@@ -4,7 +4,7 @@
 % and dataDir/paDir_allensdk folders. Tables are produces to be copied to
 % Excel sheets.
 
-clearvars -except allData
+clearvars -except repository subpop reverse qualityCheck allData fullRun includeRuns
 params
 lists
 
@@ -21,11 +21,12 @@ drawTables = false; % correlation tables
 includeRuns = 'noRun';
 
 dataDir = [dataDir_local filesep includeRuns];
+outputDir = [outputDir filesep includeRuns];
 if strcmp(repository,'uol')
-  mainFolder = [dataDir_local filesep paDir_uol filesep 'all'];
+  mainFolder = [outputDir filesep paDir_uol filesep 'all'];
   animals = animalsUOLReduced; %animalsUOLOI;
 elseif strcmp(repository,'allensdk')
-  mainFolder = [dataDir_local filesep paDir_allensdk];
+  mainFolder = [outputDir filesep paDir_allensdk];
   animals = animalsAllensdk;
   conditions = {'awake'};
 end

@@ -93,10 +93,16 @@ for iCond = 1:min([2 numel(conditions)]) % Loop through conditions
       [phaseMean, phaseCI95] = datamean(areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)}, 'circularNP');
 %       phaseCI95(phaseCI95 == 0) = NaN;
 %       phaseMean(isnan(phaseCI95(1,:)) | isnan(phaseCI95(2,:))) = NaN;
+      if size(areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)},1) == 1
+        phaseCI95 = repmat([-pi; pi], 1, numel(phaseMean));
+      end
       if ~isempty(areaPhaseFOIindividualPR)
         [phaseMean_PR, phaseCI95_PR] = datamean(areaPhaseFOIindividualPR{iCond}{options.iAreasOI(iArea)}, 'circularNP');
 %         phaseCI95_PR(phaseCI95_PR == 0) = NaN;
 %         phaseMean_PR(isnan(phaseCI95_PR(1,:)) | isnan(phaseCI95_PR(2,:))) = NaN;
+      end
+      if ~isempty(areaPhaseFOIindividualPR) && size(areaPhaseFOIindividualPR{iCond}{options.iAreasOI(iArea)},1) == 1
+        phaseCI95_PR = repmat([-pi; pi], 1, numel(phaseMean_PR));
       end
       
       % Adjust phase values

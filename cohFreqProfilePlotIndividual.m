@@ -118,6 +118,9 @@ else
   areaFOI = FOI;
 end
 [cohMean, cohCI95] = datamean(areaCohFOIindividual{iCond}{iArea});
+if size(cohMean,1) == 1
+  cohCI95 = repmat([0; 1], 1, numel(cohMean));
+end
 
 if sum(~isnan(cohMean))
   % Plot individual curves

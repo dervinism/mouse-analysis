@@ -432,14 +432,14 @@ if fullRun
           pvalSpearman = dbStruct.popData.pvalSpearman50percent(end,:)';
         end
       else
-        if iCond == 1
+        if pupilCorrCond == 1
           if ~isfield(dbStruct.popData, 'pupil')
             continue
           else
             phase = spkPhase(dbStruct.popData.pupil.phaseCoh.unitData, fRef)';
             phaseSignificant = ~isnan(spkPhaseSignificant(dbStruct.popData.pupil.phaseCoh.unitData, fRef)');
           end
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           if ~isfield(dbStruct.popData, 'rSpearman')
             continue
           else
@@ -449,36 +449,36 @@ if fullRun
         end
       end
       if significantUnits
-        if iCond == 1
+        if pupilCorrCond == 1
           significantInd = phaseSignificant;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           significantInd = pvalSpearman < alpha;
         end
       else
-        if iCond == 1
+        if pupilCorrCond == 1
           significantInd = true(size(phaseSignificant));
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           significantInd = pvalSpearman <= 1;
         end
       end
       if strcmp(subpop, 'all')
         correlatedInd = 1:numel(units);
       elseif strcmp(subpop, 'positive')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(1));
           phase = recentrePhase(phase, modeBoundaries(1));
           correlatedInd(phase > modeBoundaries(end) & phase <= modeBoundaries(2)) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman >= 0);
         end
       elseif strcmp(subpop, 'negative')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(3));
           phase = recentrePhase(phase, modeBoundaries(3));
           correlatedInd(phase > modeBoundaries(2) & phase <= modeBoundaries(end)) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman < 0);
         end
       end
@@ -494,7 +494,7 @@ if fullRun
           
           % Get unit spiking pupil correlation data
           spk = full(dbStruct.popData.spkDB);
-          if iCond == 1
+          if pupilCorrCond == 1
             if ~isfield(dbStruct.popData,'pupil')
               continue
             end
@@ -506,7 +506,7 @@ if fullRun
             rSpearman = spkCoh(dbStruct.popData.pupil.phaseCoh.unitData, fRef);
             rSpearman(negativeInd) = -rSpearman(negativeInd); % signed coherence rather than Spearman rho, so remember not to confuse
             pvalSpearman = ~isnan(spkPhaseSignificant(dbStruct.popData.pupil.phaseCoh.unitData, fRef)');
-          elseif iCond == 2
+          elseif pupilCorrCond == 2
             if ~isfield(dbStruct.popData,'rSpearman')...
                 || isempty(dbStruct.popData.rSpearman)
               continue

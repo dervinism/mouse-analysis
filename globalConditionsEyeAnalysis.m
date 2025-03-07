@@ -22,11 +22,11 @@ if strcmp(repository,'all')
   error('globalConditionsAnalysis is only available for uol repository')
 elseif strcmp(repository,'uol')
   if strcmp(subpop, 'all')
-    rootFolder = [dataDir filesep laDir_uol];
+    rootFolder = [outputDir filesep laDir_uol];
   elseif strcmp(subpop, 'positive')
-    rootFolder = [dataDir filesep laDir_uol_positive];
+    rootFolder = [outputDir filesep laDir_uol_positive];
   elseif strcmp(subpop, 'negative')
-    rootFolder = [dataDir filesep laDir_uol_negative];
+    rootFolder = [outputDir filesep laDir_uol_negative];
   end
   animals = animalsUOLOI;
 elseif strcmp(repository,'allensdk')
@@ -49,7 +49,7 @@ if fullRun
     if exist('allData', 'var')
       dataStruct = allData.(animals{animal}).dataStruct;
     else
-      load([dataDir filesep animals{animal} filesep animals{animal} '.mat'])
+      load([dataDir_local filesep animals{animal} filesep animals{animal} '.mat'])
     end
     fnsData = fieldnames(dataStruct.seriesData);
     
@@ -78,29 +78,74 @@ if fullRun
       areaPhaseConfUFullInterpPupilIndividual = {};
       areaPhaseConfLFullInterpPupilIndividual = {};
       areaFreqFullInterpPupilIndividual = {};
-      for iArea = 1:numel(areas)
-        arearSpearman5secIndividual{iArea} = [];
-        areapvalSpearman5secIndividual{iArea} = [];
-        areaFRPupilIndividual{iArea} = [];
-        areaFRPercentileIndividual_50{iArea} = [];
-        areaFRPercentileIndividual_25{iArea} = [];
-        areaFRPercentileIndividual_12p5{iArea} = [];
-        areaFRPercentileIndividual_third{iArea} = [];
-        areaFRRiseDecayIndividual{iArea} = [];
-        areaCohFullPupilIndividual{iArea} = {};
-        areaCohConfUFullPupilIndividual{iArea} = {};
-        areaCohConfLFullPupilIndividual{iArea} = {};
-        areaPhaseFullPupilIndividual{iArea} = {};
-        areaPhaseConfUFullPupilIndividual{iArea} = {};
-        areaPhaseConfLFullPupilIndividual{iArea} = {};
-        areaFreqFullPupilIndividual{iArea} = {};
-        areaCohFullInterpPupilIndividual{iArea} = [];
-        areaCohConfUFullInterpPupilIndividual{iArea} = [];
-        areaCohConfLFullInterpPupilIndividual{iArea} = [];
-        areaPhaseFullInterpPupilIndividual{iArea} = [];
-        areaPhaseConfUFullInterpPupilIndividual{iArea} = [];
-        areaPhaseConfLFullInterpPupilIndividual{iArea} = [];
-        areaFreqFullInterpPupilIndividual{iArea} = [];
+      for iCond = 1:numel(conditions)
+        for iArea = 1:numel(areas)
+          arearSpearman5secIndividual{iCond}{iArea} = []; %#ok<*SAGROW>
+          areapvalSpearman5secIndividual{iCond}{iArea} = [];
+          areaFRPupilIndividual{iCond}{iArea} = [];
+          areaFRPercentileIndividual_50{iCond}{iArea} = [];
+          areaFRPercentileIndividual_25{iCond}{iArea} = [];
+          areaFRPercentileIndividual_12p5{iCond}{iArea} = [];
+          areaFRPercentileIndividual_third{iCond}{iArea} = [];
+          areaFRRiseDecayIndividual{iCond}{iArea} = [];
+          areaCohFullPupilIndividual{iCond}{iArea} = {};
+          areaCohConfUFullPupilIndividual{iCond}{iArea} = {};
+          areaCohConfLFullPupilIndividual{iCond}{iArea} = {};
+          areaPhaseFullPupilIndividual{iCond}{iArea} = {};
+          areaPhaseConfUFullPupilIndividual{iCond}{iArea} = {};
+          areaPhaseConfLFullPupilIndividual{iCond}{iArea} = {};
+          areaFreqFullPupilIndividual{iCond}{iArea} = {};
+          areaCohFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaCohConfUFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaCohConfLFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaPhaseFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaPhaseConfUFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaPhaseConfLFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaFreqFullInterpPupilIndividual{iCond}{iArea} = [];
+          areaFRIndividual{iCond}{iArea} = [];
+          areaFRFiltLP0p001HzIndividual_50{iCond}{iArea} = [];
+          areaFRFiltLP0p001HzIndividual_25{iCond}{iArea} = [];
+          areaFRFiltLP0p001HzIndividual_12p5{iCond}{iArea} = [];
+          areaFRFiltLP0p001HzIndividual_third{iCond}{iArea} = [];
+          areaFRFiltLP0p01HzIndividual_50{iCond}{iArea} = [];
+          areaFRFiltLP0p1HzIndividual_50{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_pi{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver2{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_2piOver3{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver3{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver4{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver6{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver8{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver12{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver16{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piShifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_2piOver3Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver2Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver3Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver4Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver6Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver8Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver12Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p01to0p05HzIndividual_piOver16Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_pi{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_2piOver3{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver2{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver3{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver4{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver6{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver8{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver12{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver16{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piShifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver2Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_2piOver3Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver3Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver4Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver6Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver8Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver12Shifted{iCond}{iArea} = [];
+          areaFRFiltBP0p1to0p5HzIndividual_piOver16Shifted{iCond}{iArea} = [];
+        end
       end
     end
     
@@ -157,13 +202,13 @@ if fullRun
       for sh = 1:numel(fieldnames(dbStruct.shankData))
         units = [units; dbStruct.shankData.(['shank' num2str(sh)]).units]; %#ok<*AGROW>
         if strcmpi(subpop, 'positive') || strcmpi(subpop, 'negative')
-          if iCond == 1
+          if pupilCorrCond == 1
             if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'pupil')
               continue
             else
               phase = [phase; spkPhase(dbStruct.shankData.(['shank' num2str(sh)]).pupil.unitData, fRef)'];
             end
-          elseif iCond == 2
+          elseif pupilCorrCond == 2
             if ~isfield(dbStruct.shankData.(['shank' num2str(sh)]), 'rSpearman')
               continue
             else
@@ -175,17 +220,17 @@ if fullRun
       if strcmp(subpop, 'all')
         correlatedInd = 1:numel(units);
       elseif strcmp(subpop, 'positive')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           correlatedInd(recentrePhase(phase, 0) > -pi/2 & recentrePhase(phase, 0) <= pi/2) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman >= 0);
         end
       elseif strcmp(subpop, 'negative')
-        if iCond == 1
+        if pupilCorrCond == 1
           correlatedInd = false(size(phase));
           correlatedInd(recentrePhase(phase, pi) > pi/2 & recentrePhase(phase, pi) <= 3*pi/2) = true;
-        elseif iCond == 2
+        elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman < 0);
         end
       end
@@ -443,4 +488,17 @@ if fullRun
   end
 else
   load(filename);
+end
+
+
+
+%% Local functions
+function unitFiringRates = firingRateByPhase(spk, srSpk, phase, phaseStep, phaseShift, qualityUnitInd)
+
+phaseValues = (pi:-phaseStep:-pi) + phaseShift;
+phase = recentrePhase(phase, phaseShift);
+unitFiringRates = zeros(numel(qualityUnitInd),numel(phaseValues)-1);
+for iPhase = 1:numel(phaseValues)-1
+  unitFiringRates(:,iPhase) = (sum(spk(qualityUnitInd,phase<phaseValues(iPhase) & phase>=phaseValues(iPhase+1)),2).*srSpk)./size(spk(qualityUnitInd,phase<phaseValues(iPhase) & phase>=phaseValues(iPhase+1)),2);
+end
 end
