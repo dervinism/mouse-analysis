@@ -8,7 +8,9 @@ clearvars -except repository subpop reverse qualityCheck allData fullRun include
 params
 lists
 
-repository = 'uol';
+if ~exist('repository','var')
+  repository = 'uol';
+end
 unitThr = 10; % minimum unit or MUA count per data series
 alpha = 0.05; % significance level
 fullRun = 1; % 1 - all, 2 - bar and violin plots and correlation between fractions in different areas onwards, 3 - Correlation tables onwards

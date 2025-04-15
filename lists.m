@@ -1091,8 +1091,8 @@ exceptFR = {
   '201905221319462';
   '201905221534082'};
 
-except = exceptFR; % Include saturations
-%except = except; % Exclude saturations
+%except = exceptFR; % Include saturations
+except = except; % Exclude saturations
 
 % except = {
 %   '201902050857512'; % Probe missed thalamus of M190128_A_MD (this and below)

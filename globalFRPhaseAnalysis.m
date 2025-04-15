@@ -66,7 +66,7 @@ elseif strcmp(repository,'allensdk')
 end
 
 significantUnits = false;
-crossValidation = true;
+crossValidation = false;
 crossValidationType = '50percent';
 predictionType = 1; % 1 - binned pre-fit, 2 - smooth post-fit
 distroType = 'skewnormal'; % 'gamma' or 'skewnormal'
@@ -592,7 +592,7 @@ if fullRun
 
           % Get eye data
           eyeData = dataStruct.eyeData.([animals{animal} '_s' seriesName(1:min([14 numel(seriesName)]))]);
-          eyeData.pupilArea = double(eyeData.pupilAreaFilt.pupilAreaFiltHP0p01Hz);
+          %eyeData.pupilArea = double(eyeData.pupilAreaFilt.pupilAreaFiltHP0p01Hz);
           eyeData.frameTimes = eyeData.pupilAreaFilt.timesFiltStart:eyeData.pupilAreaFilt.timesFiltStep:eyeData.pupilAreaFilt.timesFiltStop;
 
           % Combine periods
@@ -839,11 +839,11 @@ end
 
 %% PLOT THE LOG FIRING RATE DISTRIBUTIONS
 if drawDistros
-  edges = -3:0.2:2;
+  edges = -2.5:0.35:2.05;
   options = struct();
   options.xLabel = 'Log_{10}(firing rate)';
   if strcmpi(subpop, 'all')
-    options.yLabel = 'Probability';
+    options.yLabel = 'Unit count'; %'Probability';
   elseif strcmpi(subpop, 'positive')
     %options.yLabel = 'Positive unit count';
     options.yLabel = 'Probability';
@@ -854,7 +854,7 @@ if drawDistros
   options.figFolder = mainFolder;
   options.figSize = 18;
   options.saveFig = true;
-  options.pdf = true;
+  options.pdf = false; %true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       options.figName = ['FiringRateCentile50_' areas{iAreasOI(iArea)} '_' conditions{iCond}];
@@ -1568,7 +1568,7 @@ end
 %% FIRING RATE MODULATION DISTRIBUTIONS
 if drawModulationDistros
   options = struct();
-  options.pdf = true;
+  options.pdf = false; %true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
 
@@ -2969,7 +2969,7 @@ options.distroType = distroType;
 options.figFolder = mainFolder;
 options.figSize = 18;
 options.saveFig = true;
-options.pdf = true;
+options.pdf = false; %true;
 if drawPredictions
   if predictionType == 1
     for iCond = 1:min([2 numel(conditions)])
@@ -3043,14 +3043,14 @@ end
 
 %% PLOT THE REAL AND PREDICTED LOG FIRING RATE DISTRIBUTIONS
 if drawCombinedDistros && strcmpi(subpop, 'all')
-  edges = -3:0.2:3;
+  edges = -3:0.35:3; %-3:0.2:3;
   centres = (edges(1:end-1)+0.1);
   x = centres(1):0.001:centres(end);
   options = struct();
   options.xLabel = 'Log_{10}(firing rate)';
   options.xLim = [edges(1)+0.5 2];
   if strcmpi(subpop, 'all')
-    options.yLabel = 'Probability';
+    options.yLabel = 'Unit count'; %'Probability';
   elseif strcmpi(subpop, 'positive')
     %options.yLabel = 'Positive unit count';
     options.yLabel = 'Probability';
@@ -3062,7 +3062,7 @@ if drawCombinedDistros && strcmpi(subpop, 'all')
   options.figFolder = mainFolder;
   options.figSize = 18;
   options.saveFig = false;
-  options.pdf = true;
+  options.pdf = false; %true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       if ~isempty(areaFRIndividual{iCond}{iAreasOI(iArea)})
@@ -3148,7 +3148,7 @@ if drawCombinedDistrosSplit && strcmpi(subpop, 'all')
   options.figFolder = mainFolder;
   options.figSize = 18;
   options.saveFig = false;
-  options.pdf = true;
+  options.pdf = false; %true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       if ~isempty(areaFRIndividual{iCond}{iAreasOI(iArea)})
@@ -3213,7 +3213,7 @@ if drawSmoothCombinedDistros && strcmpi(subpop, 'all')
   options.figFolder = mainFolder;
   options.figSize = 18;
   options.saveFig = false;
-  options.pdf = true;
+  options.pdf = false; %true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       if ~isempty(areaFRIndividual{iCond}{iAreasOI(iArea)})
@@ -3267,7 +3267,7 @@ if drawSmoothCombinedDistrosSplit && strcmpi(subpop, 'all')
   options.figFolder = mainFolder;
   options.figSize = 18;
   options.saveFig = false;
-  options.pdf = true;
+  options.pdf = false; %true;
   for iCond = 1:min([2 numel(conditions)])
     for iArea = 1:numel(iAreasOI)
       if ~isempty(areaFRIndividual{iCond}{iAreasOI(iArea)})
@@ -3325,13 +3325,13 @@ if ~isempty(rSpearman)
     options.colours = [matlabColours(1); matlabColours(2); matlabColours(1); matlabColours(2)];
     options.lineStyles = {'--','--','-','-'};
     options.markerStyles = {'v','v','^','^'};
-    options.legendLabels = {'Constricted negative','Constricted positive','Dilated negative','Dilated positive'};
+    options.legendLabels = {'Constricted -','Constricted +','Dilated -','Dilated +'};
     options.stats = [];
     options.saveFig = false;
     logRates2 = {logRates(rSpearman < 0, 1), logRates(rSpearman >= 0, 1), logRates(rSpearman < 0, end), logRates(rSpearman >= 0, end)};
     h = histPlotFR(edges, logRates2, options);
     l = legend;
-    l.Position = l.Position - [0.08 0.08 0 0];
+    %l.Position = l.Position - [0.08 0.08 0 0];
     
     % Display var test stats
     logRates3 = NaN(size(data,1),4);
@@ -3350,10 +3350,10 @@ if ~isempty(rSpearman)
     iComp4 = stats.iCol1 == 3 & stats.iCol2 == 4;
     textStr = ['CN(\sigma^2=' num2str(stats.var1(iComp1)) ')vDN(\sigma^2=' num2str(stats.var2(iComp1)) ') p=' num2str(stats.p(iComp1)) ', '...
       'CP(\sigma^2=' num2str(stats.var1(iComp2)) ')vDP(\sigma^2=' num2str(stats.var2(iComp2)) ') p=' num2str(stats.p(iComp2))];
-    text(xLim(2)-xAxisLength*0.99, yLim(2)-yAxisLength*0.045, textStr, 'FontSize',10);
+    %text(xLim(2)-xAxisLength*0.99, yLim(2)-yAxisLength*0.045, textStr, 'FontSize',10);
     textStr = ['CN(\sigma^2=' num2str(stats.var1(iComp3)) ')vCP(\sigma^2=' num2str(stats.var2(iComp3)) ') p=' num2str(stats.p(iComp3)) ', '...
       'DN(\sigma^2=' num2str(stats.var1(iComp4)) ')vDP(\sigma^2=' num2str(stats.var2(iComp4)) ') p=' num2str(stats.p(iComp4))];
-    text(xLim(2)-xAxisLength*0.99, yLim(2)-yAxisLength*0.08, textStr, 'FontSize',10);
+    %text(xLim(2)-xAxisLength*0.99, yLim(2)-yAxisLength*0.08, textStr, 'FontSize',10);
     
     % Display means test stats
 %     [statsMeanSplit.pNegative, ~, statsMeanSplit.statsNegative] = signrank(logRates2{1}, logRates2{3});
@@ -3375,10 +3375,10 @@ if ~isempty(rSpearman)
     stats = statsMeanSplit;
     textStr = ['CN(\mu=' num2str(mean(logRates2{1},'omitnan')) ')vDN(\mu=' num2str(mean(logRates2{3},'omitnan')) ') p=' num2str(stats.pNegative) ', '...
       'CP(\mu=' num2str(mean(logRates2{2},'omitnan')) ')vDP(\mu=' num2str(mean(logRates2{4},'omitnan')) ') p=' num2str(stats.pPositive)];
-    text(xLim(2)-xAxisLength*0.99, yLim(2)+yAxisLength*0.025, textStr, 'FontSize',10);
+    %text(xLim(2)-xAxisLength*0.99, yLim(2)+yAxisLength*0.025, textStr, 'FontSize',10);
     textStr = ['CN(\mu=' num2str(mean(logRates2{1},'omitnan')) ')vCP(\mu=' num2str(mean(logRates2{2},'omitnan')) ') p=' num2str(stats.pConstricted) ', '...
       'DN(\mu=' num2str(mean(logRates2{3},'omitnan')) ')vDP(\mu=' num2str(mean(logRates2{4},'omitnan')) ') p=' num2str(stats.pDilated)];
-    text(xLim(2)-xAxisLength*0.99, yLim(2)-yAxisLength*0.01, textStr, 'FontSize',10);
+    %text(xLim(2)-xAxisLength*0.99, yLim(2)-yAxisLength*0.01, textStr, 'FontSize',10);
     
     % Save the figure
     label = [3.5 3];
@@ -3935,8 +3935,8 @@ function firingRateCombinedPlot(data, edges, centres, x, frData, model, legendLa
 % Plot data distributions
 logRates = getLog(data(:,[1 end]));
 options.legendLabels = legendLabels1;
-options.lineStyles = {':',':'};
-options.lineWidths = [1.5 1.5];
+options.lineStyles = {'-','-'};
+options.lineWidths = [2 2];
 options.markerStyles = {'.','o'};
 options.displayMeans = true;
 options.displayVars = true;
@@ -3945,15 +3945,15 @@ options.fH = [];
 options.fH = histPlotFR(edges, logRates, options);
 
 % Plot predicted distributions
-options.legendLabels = legendLabels2;
-options.lineStyles = {'-','-'};
-options.lineWidths = [2 2];
-options.markerStyles = {'.','o'};
-options.displayMeans = false;
-options.displayVars = false;
-options.fittedMean = false;
-options.markerVPos = 1.15*max([max(histcounts(logRates(:,1), edges)) max(histcounts(logRates(:,2), edges))]);
-options.fH = firingRatePredictPlot(edges, centres, x, frData, model, options);
+% options.legendLabels = legendLabels2;
+% options.lineStyles = {'-','-'};
+% options.lineWidths = [2 2];
+% options.markerStyles = {'.','o'};
+% options.displayMeans = false;
+% options.displayVars = false;
+% options.fittedMean = false;
+% options.markerVPos = 1.15*max([max(histcounts(logRates(:,1), edges)) max(histcounts(logRates(:,2), edges))]);
+% options.fH = firingRatePredictPlot(edges, centres, x, frData, model, options);
 
 % Display stats
 digit = 3;
@@ -3980,8 +3980,8 @@ function firingRateCombinedPlot2(data, edges, centres, x, frData, model, legendL
 % Plot data distributions
 logRates = getLog(data(:,[1 end]));
 options.legendLabels = legendLabels1;
-options.lineStyles = {':',':'};
-options.lineWidths = [1.5 1.5];
+options.lineStyles = {'-','-'};
+options.lineWidths = [2 2];
 options.markerStyles = {'.','o'};
 options.displayMeans = true;
 options.displayVars = true;
@@ -3990,15 +3990,15 @@ options.fH = [];
 options.fH = histPlotFR(edges, logRates, options);
 
 % Plot predicted distributions
-options.legendLabels = legendLabels2;
-options.lineStyles = {'-','-'};
-options.lineWidths = [2 2];
-options.markerStyles = {'.','o'};
-options.displayMeans = false;
-options.displayVars = false;
-options.fittedMean = false;
-options.markerVPos = 1.15*max([max(histcounts(logRates(:,1), edges)) max(histcounts(logRates(:,2), edges))]);
-options.fH = firingRatePredictPlot2(edges, centres, x, frData, model, options);
+% options.legendLabels = legendLabels2;
+% options.lineStyles = {'-','-'};
+% options.lineWidths = [2 2];
+% options.markerStyles = {'.','o'};
+% options.displayMeans = false;
+% options.displayVars = false;
+% options.fittedMean = false;
+% options.markerVPos = 1.15*max([max(histcounts(logRates(:,1), edges)) max(histcounts(logRates(:,2), edges))]);
+% options.fH = firingRatePredictPlot2(edges, centres, x, frData, model, options);
 
 % Display stats
 digit = 3;
@@ -4009,8 +4009,8 @@ text(max(datamean(logRates))-0.6,0.125*max([max(histcounts(logRates(:,1), edges)
   ['p=' num2str(round(statsVar.p,digit,'significant'))], 'FontSize',20);
 
 % Save the figure
-label = [3.5 3];
-margin = [0.6 0.55];
+label = [3.9 3.1];
+margin = [0.8 0.55];
 width = options.figSize-label(1)-margin(1);
 height = options.figSize-label(2)-margin(2);
 paperSize = resizeFig(options.fH, gca, width, height, label, margin, 0);
