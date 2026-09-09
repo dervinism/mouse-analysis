@@ -30,11 +30,11 @@ end
 if ~exist('qualityCheck', 'var')
   qualityCheck = false;
 end
-if strcmpi(includeRuns, 'noRun')
+% if strcmpi(includeRuns, 'noRun')
   fRef = 0.3;
-else
-  fRef = 0.03;
-end
+% else
+%   fRef = 0.03;
+% end
 
 outputDir = [outputDir filesep includeRuns];
 if strcmp(repository,'uol')
@@ -80,10 +80,10 @@ else
   mainFolder = [rootFolder filesep unitsFolder];
 end
 
-drawPhaseProfiles = true;
+drawPhaseProfiles = false;
 drawCohProfiles = false;
-drawPhaseHistos = [true false false];
-statsPhaseProfiles = false;
+drawPhaseHistos = [false false false];
+statsPhaseProfiles = true;
 drawPhaseSpans = false;
 drawBetaCorrelations = false;
 drawPhase2phaseCorrelations = false;
@@ -235,10 +235,20 @@ if fullRun
       end
 
       % Determine mode boundaries
-      if strcmpi(repository, 'uol')
-        modeBoundaries = phaseHistoBinCentres(modesUOL{area(1)});
-      elseif strcmpi(repository, 'allensdk')
-        modeBoundaries = phaseHistoBinCentres(modesAllensdk{area(1)});
+      % if strcmpi(repository, 'uol')
+      %   modeBoundaries = phaseHistoBinCentres(modesUOL{area(1)});
+      % elseif strcmpi(repository, 'allensdk')
+      %   modeBoundaries = phaseHistoBinCentres(modesAllensdk{area(1)});
+      % end
+      if any(ismember(area, [2 3 4 5 10 11 12 13 15 16 17 23 24 25 26 27 33 34 35 52])) % Th
+        modeBoundaries = [0 pi/2 pi 3*pi/2] - pi/8;
+      elseif any(ismember(area, [1 9 20 21 22 41 42 43 44 45 46 47 49 50 51])) % Cx
+        % modeBoundaries = [0 pi/2 pi 3*pi/2];
+        modeBoundaries = [0 pi/2 pi 3*pi/2] - pi/8;
+      elseif any(ismember(area, [6 7 8 14 18 19 28 29 30 31 32 36:40])) % Hp
+        modeBoundaries = [0 pi/2 pi 3*pi/2] + pi/8;
+      else
+        modeBoundaries = [0 pi/2 pi 3*pi/2];
       end
       
       % Disqualify low quality units if needed
@@ -273,18 +283,32 @@ if fullRun
       elseif strcmp(subpop, 'positive')
         if pupilCorrCond == 1
           correlatedInd = false(size(phase));
-          modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(1));
-          phase = recentrePhase(phase, modeBoundaries(1));
-          correlatedInd(phase > modeBoundaries(end) & phase <= modeBoundaries(2)) = true;
+          % modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(1));
+          % phase = recentrePhase(phase, modeBoundaries(1));
+          % correlatedInd(phase > modeBoundaries(end) & phase <= modeBoundaries(2)) = true;
+          % modeBoundaries = recentrePhase(modeBoundaries, 0);
+          phase = recentrePhase(phase, 0);
+          correlatedInd(phase > modeBoundaries(1) & phase <= modeBoundaries(3)) = true;
+          correlatedInd(phase > modeBoundaries(1) +2*pi & phase <= modeBoundaries(3) +2*pi) = true;
+          correlatedInd(phase > modeBoundaries(1) +4*pi & phase <= modeBoundaries(3) +4*pi) = true;
+          correlatedInd(phase > modeBoundaries(1) -2*pi & phase <= modeBoundaries(3) -2*pi) = true;
+          correlatedInd(phase > modeBoundaries(1) -4*pi & phase <= modeBoundaries(3) -4*pi) = true;
         elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman >= 0);
         end
       elseif strcmp(subpop, 'negative')
         if pupilCorrCond == 1
           correlatedInd = false(size(phase));
-          modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(3));
-          phase = recentrePhase(phase, modeBoundaries(3));
-          correlatedInd(phase > modeBoundaries(2) & phase <= modeBoundaries(end)) = true;
+          % modeBoundaries = recentrePhase(modeBoundaries, modeBoundaries(3));
+          % phase = recentrePhase(phase, modeBoundaries(3));
+          % correlatedInd(phase > modeBoundaries(2) & phase <= modeBoundaries(end)) = true;
+          % modeBoundaries = recentrePhase(modeBoundaries, 0);
+          phase = recentrePhase(phase, 0);
+          correlatedInd(phase > modeBoundaries(3) & phase <= modeBoundaries(1)+2*pi) = true;
+          correlatedInd(phase > modeBoundaries(3) +2*pi & phase <= modeBoundaries(1)+2*pi +2*pi) = true;
+          correlatedInd(phase > modeBoundaries(3) +4*pi & phase <= modeBoundaries(1)+2*pi +4*pi) = true;
+          correlatedInd(phase > modeBoundaries(3) -2*pi & phase <= modeBoundaries(1)+2*pi -2*pi) = true;
+          correlatedInd(phase > modeBoundaries(3) -4*pi & phase <= modeBoundaries(1)+2*pi -4*pi) = true;
         elseif pupilCorrCond == 2
           correlatedInd = find(rSpearman < 0);
         end
@@ -493,12 +517,31 @@ save(filename, 'phaseHistos','distributionStats', '-append');
 
 %% STATS ON MEAN PHASE FREQUENCY PROFILES
 if statsPhaseProfiles
-  if ~strcmp(repository, 'allensdk')
-    [fPEst, fWTest, strPMethod, pEst, U2, pObs, U2Obs] = phaseComparisonStats(areas, areaFreqFullInterpIndividual, FOI, areaPhaseFullInterpIndividual, [areasCritical; areas2compareCritical]);
-  else
-    fPEst = []; fWTest = []; strPMethod = []; pEst = []; U2 = []; pObs = []; U2Obs = [];
+  % if ~strcmp(repository, 'allensdk')
+  %   [fPEst, fWTest, strPMethod, pEst, U2, pObs, U2Obs] = phaseComparisonStats(areas, areaFreqFullInterpIndividual, FOI, areaPhaseFullInterpIndividual, [areasCritical; areas2compareCritical]);
+  % else
+  %   fPEst = []; fWTest = []; strPMethod = []; pEst = []; U2 = []; pObs = []; U2Obs = [];
+  % end
+  % save(filename, 'fPEst','fWTest','strPMethod','pEst','U2','pObs','U2Obs', '-append');
+  pupilStats_frequencies = FOI;
+  for iFreq = 1:numel(FOI)
+    fInd = find(ismember(areaFreqFullInterpIndividual, FOI(iFreq)));
+    phases = cellfun(@(x) recentrePhase(x(:,fInd),0), areaPhaseFullInterpIndividual{1}, ...
+      'UniformOutput', false);
+    disp([iFreq areaFreqFullInterpIndividual(fInd)])
+    pupilStats_parametric{iFreq} = meanTest2(phases, 'wwtest');
+    for iComp = 1:numel(pupilStats_parametric{iFreq})
+      pupilStats_parametric{iFreq}(iComp).area1 = areas{pupilStats_parametric{iFreq}(iComp).iCol1};
+      pupilStats_parametric{iFreq}(iComp).area2 = areas{pupilStats_parametric{iFreq}(iComp).iCol2};
+    end
+    pupilStats_nonparametric{iFreq} = meanTest2(phases, 'cmtest');
+    for iComp = 1:numel(pupilStats_nonparametric{iFreq})
+      pupilStats_nonparametric{iFreq}(iComp).area1 = areas{pupilStats_nonparametric{iFreq}(iComp).iCol1};
+      pupilStats_nonparametric{iFreq}(iComp).area2 = areas{pupilStats_nonparametric{iFreq}(iComp).iCol2};
+    end
   end
-  save(filename, 'fPEst','fWTest','strPMethod','pEst','U2','pObs','U2Obs', '-append');
+  save(filename, 'pupilStats_parametric','pupilStats_nonparametric', ...
+    'pupilStats_frequencies', '-append');
 end
 
 

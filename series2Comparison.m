@@ -118,25 +118,47 @@ if augmented
   [comp, compName] = findComp(comparisonsList, comparison, comp, compName);
   
   % Special case: Cx
-  if strcmpi(areaName1,'S1') || strcmpi(areaName1,'RSC') ||...
-      strcmpi(areaName2,'S1') || strcmpi(areaName2,'RSC')
-    if strcmpi(areaName1,'S1') || strcmpi(areaName1,'RSC')
+  % Sub-areas that pool into Cx: S1, RSC (somatosensory/retrosplenial).
+  % VIS (visual cortex, relevant for the Allen dataset) is included on its
+  % own, NOT alongside its own V1/V2 sub-components: for Allen, VIS is
+  % constructed upstream (determineSeries.m) as a combined V1+V2 reference
+  % signal built from the SAME source-side units as the individual V1/V2
+  % comparisons, not a disjoint unit set - adding V1 and V2 on top of VIS
+  % would repeat the same source units up to three times (confirmed via
+  % identical total row counts across ThVsV1/ThVsVIS/ThVsV2-style entries
+  % in globalUnits_ca.mat).
+  if strcmpi(areaName1,'S1') || strcmpi(areaName1,'RSC') || strcmpi(areaName1,'VIS') ||...
+      strcmpi(areaName2,'S1') || strcmpi(areaName2,'RSC') || strcmpi(areaName2,'VIS')
+    if strcmpi(areaName1,'S1') || strcmpi(areaName1,'RSC') || strcmpi(areaName1,'VIS')
       areaName1 = 'Cx';
     end
-    if strcmpi(areaName2,'S1') || strcmpi(areaName2,'RSC')
+    if strcmpi(areaName2,'S1') || strcmpi(areaName2,'RSC') || strcmpi(areaName2,'VIS')
       areaName2 = 'Cx';
     end
     comparison = [areaName1 'Vs' areaName2];
     [comp, compName] = findComp(comparisonsList, comparison, comp, compName);
   end
-  
+
   % Special case: Hp
-  if strcmpi(areaName1,'CA') || strcmpi(areaName1,'DG') ||...
-      strcmpi(areaName2,'CA') || strcmpi(areaName2,'DG')
-    if strcmpi(areaName1,'CA') || strcmpi(areaName1,'DG')
+  % Sub-areas that pool into Hp: CA (merged CA1+CA3), DG, and the individual
+  % CA1/CA3 sub-fields, since determineArea/determineAreaFromSeries never
+  % actually returns the merged 'CA' label for a real per-channel UoL
+  % recording (only 'CA1' or 'CA3' individually) - without these, units
+  % recorded in CA1 or CA3 were silently excluded from the Hp pool entirely.
+  % NOTE: this branch is UoL-specific in its actual effect (it is currently
+  % never exercised for Allen, since the allensdk call site does not pass
+  % augmented=true). If that ever changes, do NOT enable this branch as-is
+  % for Allen: Allen's 'Hp'/'CA' labels are themselves pre-combined
+  % population-level reference signals built upstream (determineSeries.m),
+  % analogous to VIS above, so pooling CA1/CA3/DG alongside Hp/CA would
+  % repeat the same source-side units rather than combining disjoint ones -
+  % the same class of bug the VIS fix above addresses.
+  if strcmpi(areaName1,'CA') || strcmpi(areaName1,'DG') || strcmpi(areaName1,'CA1') || strcmpi(areaName1,'CA3') ||...
+      strcmpi(areaName2,'CA') || strcmpi(areaName2,'DG') || strcmpi(areaName2,'CA1') || strcmpi(areaName2,'CA3')
+    if strcmpi(areaName1,'CA') || strcmpi(areaName1,'DG') || strcmpi(areaName1,'CA1') || strcmpi(areaName1,'CA3')
       areaName1 = 'Hp';
     end
-    if strcmpi(areaName2,'CA') || strcmpi(areaName2,'DG')
+    if strcmpi(areaName2,'CA') || strcmpi(areaName2,'DG') || strcmpi(areaName2,'CA1') || strcmpi(areaName2,'CA3')
       areaName2 = 'Hp';
     end
     comparison = [areaName1 'Vs' areaName2];

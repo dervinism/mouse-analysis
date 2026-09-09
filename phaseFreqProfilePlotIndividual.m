@@ -77,7 +77,8 @@ if isempty(animalIDs) && isempty(series) % Displaying figures on a per area basi
     for iArea = 1:numel(options.iAreasOI) % Loop through areas
       if ~isempty(areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)})
         inds = 1:size(areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)},1);
-        coreFunc(iCond, options.iAreasOI(iArea), areas, conditions, FOI, areaPhaseFOIindividual, [], [], inds, figFileName, options);
+        coreFunc(iCond, options.iAreasOI(iArea), areas, conditions, FOI, areaPhaseFOIindividual, ...
+          [], [], inds, figFileName, options);
       end
     end
   end
@@ -91,6 +92,23 @@ elseif ~isempty(animalIDs) && isempty(series) % Displaying figures on a per area
           animalInds = find(ismember(animalIDs{iCond}{options.iAreasOI(iArea)}, uniqueAnimals{iAnimal}));
           coreFunc(iCond, options.iAreasOI(iArea), areas, conditions, FOI, areaPhaseFOIindividual,...
             uniqueAnimals{iAnimal}, [], animalInds, figFileName, options);
+        end
+      end
+    end
+  end
+elseif isempty(animalIDs) && ~isempty(series) % Displaying figures on a per area per recording basis
+  for iCond = 1:min([2 numel(conditions)]) % Loop through conditions
+    for iArea = 1:numel(options.iAreasOI) % Loop through areas
+      if ~isempty(areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)})
+        nRecs = numel(series{options.iAreasOI(iArea)});
+        for iRec = 1:nRecs
+          if isfield(areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)}{iRec}, 'fullInterpCoherence')
+            phase = areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)}{iRec}.fullInterpCoherence.phase;
+            freq = areaPhaseFOIindividual{iCond}{options.iAreasOI(iArea)}{iRec}.fullInterpCoherence.frequency(1,:);
+            inds = 1:size(phase,1);
+            coreFunc(iCond, options.iAreasOI(iArea), areas, conditions, freq, phase,...
+              [], [], inds, figFileName, options);
+          end
         end
       end
     end
@@ -122,7 +140,11 @@ if iscell(FOI)
 else
   areaFOI = FOI;
 end
-phase = areaPhaseFOIindividual{iCond}{iArea}(inds,:);
+if iscell(areaPhaseFOIindividual)
+  phase = areaPhaseFOIindividual{iCond}{iArea}(inds,:);
+else
+  phase = areaPhaseFOIindividual(inds,:);
+end
 [phaseMean, phaseCI95] = datamean(phase, 'circularNP');
 % phaseCI95(phaseCI95 == 0) = NaN;
 % phaseMean(isnan(phaseCI95(1,:)) | isnan(phaseCI95(2,:))) = NaN;
@@ -145,7 +167,7 @@ if sum(~isnan(phaseMean))
   semilogx([10e-4 10e2],[0 0], 'k:');
   hold on
   for u = 1:numel(inds)
-    unwrappedPhase = recentrePhase(areaPhaseFOIindividual{iCond}{iArea}(inds(u),:),...
+    unwrappedPhase = recentrePhase(phase(inds(u),:),...
       mean(phaseMeanROI(~isnan(phaseMeanROI))));
     if ~isempty(unwrappedPhase) && sum(~isnan(unwrappedPhase))
       semilogx(areaFOI, adjustPhase(unwrappedPhase, areaFOI, [], options.cutoffFreq), 'Color',[200 200 200]./255);

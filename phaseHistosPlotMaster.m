@@ -141,7 +141,8 @@ for iCond = 1:min([2 numel(conditions)])
               [distributionStats.pRayleigh{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.zRayleigh{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.pOmnibus{iCond}{options.iAreasOI(iArea)}{f},...
                 distributionStats.mOmnibus{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.pRao{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.U_Rao{iCond}{options.iAreasOI(iArea)}{f},...
                 distributionStats.pV{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.vV{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.pHR{iCond}{options.iAreasOI(iArea)}{f},...
-                distributionStats.T_HR{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.nModes{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.excessMass{iCond}{options.iAreasOI(iArea)}{f},...
+                distributionStats.T_HR{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.pRayleighBi{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.zRayleighBi{iCond}{options.iAreasOI(iArea)}{f}, ...
+                distributionStats.nModes{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.excessMass{iCond}{options.iAreasOI(iArea)}{f},...
                 distributionStats.U2_KDE{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.pKDE{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.modes{iCond}{options.iAreasOI(iArea)}{f},...
                 distributionStats.dipHDT{iCond}{options.iAreasOI(iArea)}{f}, distributionStats.pHDT{iCond}{options.iAreasOI(iArea)}{f}] = phaseDistributionTests(...
                 phase(:,f), edges, true); % Stats
@@ -156,6 +157,8 @@ for iCond = 1:min([2 numel(conditions)])
               distributionStats.vV{iCond}{options.iAreasOI(iArea)}{f} = [];
               distributionStats.pHR{iCond}{options.iAreasOI(iArea)}{f} = [];
               distributionStats.T_HR{iCond}{options.iAreasOI(iArea)}{f} = [];
+              distributionStats.pRayleighBi{iCond}{options.iAreasOI(iArea)}{f} = [];
+              distributionStats.zRayleighBi{iCond}{options.iAreasOI(iArea)}{f} = [];
               distributionStats.nModes{iCond}{options.iAreasOI(iArea)}{f} = [];
               distributionStats.excessMass{iCond}{options.iAreasOI(iArea)}{f} = [];
               distributionStats.U2_KDE{iCond}{options.iAreasOI(iArea)}{f} = [];
@@ -262,6 +265,8 @@ for iCond = 1:min([2 numel(conditions)])
           distributionStats.vV{iCond}{options.iAreasOI(iArea)} = distributionStats.vV{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
           distributionStats.pHR{iCond}{options.iAreasOI(iArea)} = distributionStats.pHR{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
           distributionStats.T_HR{iCond}{options.iAreasOI(iArea)} = distributionStats.T_HR{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
+          distributionStats.pRayleighBi{iCond}{options.iAreasOI(iArea)} = distributionStats.pRayleighBi{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
+          distributionStats.zRayleighBi{iCond}{options.iAreasOI(iArea)} = distributionStats.zRayleighBi{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
           distributionStats.nModes{iCond}{options.iAreasOI(iArea)} = distributionStats.nModes{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
           distributionStats.excessMass{iCond}{options.iAreasOI(iArea)} = distributionStats.excessMass{iCond}{options.iAreasOI(iArea)}(reverseSortInds);
           distributionStats.U2_KDE{iCond}{options.iAreasOI(iArea)} = distributionStats.U2_KDE{iCond}{options.iAreasOI(iArea)}(reverseSortInds);

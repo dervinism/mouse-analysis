@@ -1,5 +1,5 @@
-repository = 'allensdk'; % 'uol' or 'allensdk'
-subpop = 'positive'; %'all', 'positive', 'negative'
+repository = 'uol'; % 'uol' or 'allensdk'
+subpop = 'all'; %'all', 'positive', 'negative'
 fullRun = true; % Full data analyses (true) or only creating figures (false)
 includeRuns = 'noRun'; % 'run', 'noRun'
 
@@ -251,7 +251,7 @@ if strcmp(repository,'uol')
     meanPhaseProfilesSummary3({'anaesthesia'}, dataRegular.areas, dataReverse.areas, {'VB',{'S1','CA','DG','RSC','Po'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
       dataRegular.areaPhaseFullInterpIndividual, dataReverse.areaPhaseFullInterpIndividual, figFolder, opt);
   end
-  
+
   if strcmp(subpop, 'positive')
     opt.ylim = [-pi-pi/2 pi+pi/2];
     mainFolder = [outputDir filesep includeRuns filesep caDir_uol_positive filesep unitsFolder];
@@ -373,7 +373,7 @@ if strcmp(repository,'uol')
     meanPhaseProfilesSummary3({'anaesthesia'}, dataRegular.areas, dataReverse.areas, {'VB',{'S1','CA','DG','RSC','Po'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
       dataRegular.areaPhaseFullInterpIndividual, dataReverse.areaPhaseFullInterpIndividual, figFolder, opt);
   end
-  
+
   if strcmp(subpop, 'negative')
     opt.ylim = [-pi-pi/2 pi+pi/2];
     mainFolder = [outputDir filesep includeRuns filesep caDir_uol_negative filesep unitsFolder];
@@ -495,7 +495,7 @@ if strcmp(repository,'uol')
     meanPhaseProfilesSummary3({'anaesthesia'}, dataRegular.areas, dataReverse.areas, {'VB',{'S1','CA','DG','RSC','Po'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
       dataRegular.areaPhaseFullInterpIndividual, dataReverse.areaPhaseFullInterpIndividual, figFolder, opt);
   end
-  
+
 elseif strcmp(repository,'allensdk')
   if strcmp(subpop, 'all')
     opt.ylim = [-pi-pi/2 pi+pi/2];
@@ -561,7 +561,7 @@ elseif strcmp(repository,'allensdk')
     meanPhaseProfilesSummary3({'awake'}, dataRegular.areas, dataReverse.areas, {'LGN',{'V1','CA','DG','V2','LP'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
       dataRegular.areaPhaseFullInterpIndividual, dataReverse.areaPhaseFullInterpIndividual, figFolder, opt);
   end
-  
+
   if strcmp(subpop, 'positive')
     opt.ylim = [-pi-pi/2 pi+pi/2];
     mainFolder = [outputDir filesep includeRuns filesep caDir_allensdk_positive filesep unitsFolder];
@@ -626,7 +626,7 @@ elseif strcmp(repository,'allensdk')
     meanPhaseProfilesSummary3({'awake'}, dataRegular.areas, dataReverse.areas, {'LGN',{'V1','CA','DG','V2','LP'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
       dataRegular.areaPhaseFullInterpIndividual, dataReverse.areaPhaseFullInterpIndividual, figFolder, opt);
   end
-  
+
   if strcmp(subpop, 'negative')
     opt.ylim = [-pi-pi/2 pi+pi/2];
     mainFolder = [outputDir filesep includeRuns filesep caDir_allensdk_negative filesep unitsFolder];
@@ -692,243 +692,123 @@ elseif strcmp(repository,'allensdk')
       dataRegular.areaPhaseFullInterpIndividual, dataReverse.areaPhaseFullInterpIndividual, figFolder, opt);
   end
 end
-% close all
-% 
-% 
-% 
-% if strcmp(subpop, 'all')
-%   globalEyeAnalysis
-% 
-%   globalEyeAnalysis_halves
-% 
-%   qualityCheck = false;
-%   globalEyeAnalysis_units
-% 
-%   globalEyeAnalysis_unitsHalves
-% 
+close all
+
+
+
+if strcmp(subpop, 'all')
+  % globalEyeAnalysis
+  % 
+  % globalEyeAnalysis_halves
+
+  qualityCheck = false;
+  globalEyeAnalysis_units
+
+  % globalEyeAnalysis_unitsHalves
+
+  if strcmp(repository,'all') || strcmp(repository,'uol')
+%     qualityCheck = true;
+%     globalEyeAnalysis_units
+%     
+%     globalEyeAnalysis_unitsHalves
+
+
+
+%     globalMotionAnalysis
+%     
+%     globalMotionAnalysis_halves
+%     
+%     qualityCheck = false;
+%     globalMotionAnalysis_units
+%     
+%     globalMotionAnalysis_unitsHalves
+
+%     qualityCheck = true;
+%     globalMotionAnalysis_units
+%     
+%     globalMotionAnalysis_unitsHalves
+  end
+
+else
+  qualityCheck = false;
+  globalEyeAnalysis_units
 %   if strcmp(repository,'all') || strcmp(repository,'uol')
-% %     qualityCheck = true;
-% %     globalEyeAnalysis_units
-% %     
-% %     globalEyeAnalysis_unitsHalves
-% 
-% 
-% 
-% %     globalMotionAnalysis
-% %     
-% %     globalMotionAnalysis_halves
-% %     
-% %     qualityCheck = false;
-% %     globalMotionAnalysis_units
-% %     
-% %     globalMotionAnalysis_unitsHalves
-% 
-% %     qualityCheck = true;
-% %     globalMotionAnalysis_units
-% %     
-% %     globalMotionAnalysis_unitsHalves
+%     qualityCheck = true;
+%     globalEyeAnalysis_units
 %   end
-% 
-% else
-%   qualityCheck = false;
-%   globalEyeAnalysis_units
-% %   if strcmp(repository,'all') || strcmp(repository,'uol')
-% %     qualityCheck = true;
-% %     globalEyeAnalysis_units
-% %   end
-% end
-% 
-% 
-% 
-% % if strcmp(repository,'uol')
-% %   if strcmp(subpop, 'all')
-% %     dataRegular = load('R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\globalUnits_area2pupil.mat');
-% %     opt.xlim = [freqLimUOL(1) 2];
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'lS1','lRSC','CA','DG'},'VB'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'VB',{'lS1','lRSC','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'lRSC','CA','DG'},'lS1'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'lS1',{'lRSC','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'lRSC',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'lRSC'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 2*pi];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'CA',{'DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-2*pi pi/2];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'DG',{'CA'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol\units\phaseDiffProfiles', opt);
-% %   elseif strcmp(subpop, 'positive')
-% %     opt.xlim = [freqLimUOL(1) 2];
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     dataRegular = load('R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\globalUnits_area2pupil.mat');
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'lS1','lRSC','CA','DG'},'VB'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'VB',{'lS1','lRSC','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'lRSC','CA','DG'},'lS1'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'lS1',{'lRSC','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'lRSC',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'lRSC'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 2*pi];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'CA',{'DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-2*pi pi/2];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'DG',{'CA'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles', opt);
-% %   elseif strcmp(subpop, 'negative')
-% %     opt.xlim = [freqLimUOL(1) 2];
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     dataRegular = load('R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\globalUnits_area2pupil.mat');
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'lS1','lRSC','CA','DG'},'VB'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'VB',{'lS1','lRSC','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'lRSC','CA','DG'},'lS1'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'lS1',{'lRSC','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'lRSC',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi-pi/4 pi+pi/4];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'lRSC'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 2*pi];
-% %     opt.legendLoc = 'SouthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'CA',{'DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-2*pi pi/2];
-% %     opt.legendLoc = 'NorthEast';
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'DG',{'CA'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles', opt);
-% %   end
-% % elseif strcmp(repository,'allensdk')
-% %   if strcmp(subpop, 'all')
-% %     opt.xlim = [freqLimAllen(1) 2];
-% %     opt.ylim = [-pi/2 pi];
-% %     dataRegular = load('R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\globalUnits_area2pupil.mat');
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'V1','CA','DG'},'LGN'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'LGN',{'V1','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'V1'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'V1',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'CA',{'DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'DG',{'CA'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'VB'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'VB',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk\units\phaseDiffProfiles', opt);
-% %   elseif strcmp(subpop, 'positive')
-% %     opt.xlim = [freqLimAllen(1) 2];
-% %     opt.ylim = [-pi/2 pi];
-% %     dataRegular = load('R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\globalUnits_area2pupil.mat');
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'V1','CA','DG'},'LGN'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'LGN',{'V1','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'V1'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'V1',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'CA',{'DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'DG',{'CA'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'VB'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'VB',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles', opt);
-% %   elseif strcmp(subpop, 'negative')
-% %     opt.xlim = [freqLimAllen(1) 2];
-% %     opt.ylim = [-pi/2 pi];
-% %     dataRegular = load('R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\globalUnits_area2pupil.mat');
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'V1','CA','DG'},'LGN'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'LGN',{'V1','CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'V1'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'V1',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'CA',{'DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'DG',{'CA'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi/2 pi];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {{'CA','DG'},'VB'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %     opt.ylim = [-pi pi/2];
-% %     meanPhaseProfilesSummary4({'awake'}, dataRegular.areas, {'VB',{'CA','DG'}}, dataRegular.areaFreqFullInterpIndividual, FOI,...
-% %       dataRegular.areaPhaseFullInterpIndividual, 'R:\CSN\Shared\Dynamics\Data\mouse_analysis_data\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles', opt);
-% %   end
-% % end
-% % close all
+end
+
+
+if pupilCorrCond == 1 && ~strcmpi(subpop,'all')
+  opt.type = 'parametric';
+else
+  opt.type = 'nonparametric';
+end
+if strcmp(repository,'uol')
+  if strcmp(subpop, 'all')
+    dataRegular = load([outputDir '\area2pupil_comparisons_uol\units\globalUnits_area2pupil.mat']);
+    opt.xlim = [freqLimUOL(1) 2];
+    opt.ylim = [-pi/6 2*pi];
+    opt.legendLoc = 'SouthEast';
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','lS1','lRSC','CA','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','lS1','lRSC','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'Th','Cx','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol\units\phaseDiffProfiles'], opt);
+  elseif strcmp(subpop, 'positive')
+    dataRegular = load([outputDir '\area2pupil_comparisons_uol_positive\units\globalUnits_area2pupil.mat']);
+    opt.xlim = [freqLimUOL(1) 2];
+    opt.ylim = [-pi/6 2*pi];
+    opt.legendLoc = 'SouthEast';
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','lS1','lRSC','CA','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','lS1','lRSC','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'Th','Cx','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_positive\units\phaseDiffProfiles'], opt);
+  elseif strcmp(subpop, 'negative')
+    dataRegular = load([outputDir '\area2pupil_comparisons_uol_negative\units\globalUnits_area2pupil.mat']);
+    opt.xlim = [freqLimUOL(1) 2];
+    opt.ylim = [-pi/6 2*pi];
+    opt.legendLoc = 'SouthEast';
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','lS1','lRSC','CA','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','lS1','lRSC','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'Th','Cx','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'VB','Cx','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_uol_negative\units\phaseDiffProfiles'], opt);
+  end
+elseif strcmp(repository,'allensdk')
+  if strcmp(subpop, 'all')
+    dataRegular = load([outputDir '\area2pupil_comparisons_allensdk\units\globalUnits_area2pupil.mat']);
+    opt.xlim = [freqLimAllen(1) 2];
+    opt.ylim = [-pi/6 2*pi];
+    opt.legendLoc = 'SouthEast';
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'LGN','V1','V2','CA','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_allensdk\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'Th','VIS','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_allensdk\units\phaseDiffProfiles'], opt);
+  elseif strcmp(subpop, 'positive')
+    dataRegular = load([outputDir '\area2pupil_comparisons_allensdk_positive\units\globalUnits_area2pupil.mat']);
+    opt.xlim = [freqLimAllen(1) 2];
+    opt.ylim = [-pi/6 2*pi];
+    opt.legendLoc = 'SouthEast';
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'LGN','V1','V2','CA','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'Th','VIS','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_allensdk_positive\units\phaseDiffProfiles'], opt);
+  elseif strcmp(subpop, 'negative')
+    dataRegular = load([outputDir '\area2pupil_comparisons_allensdk_negative\units\globalUnits_area2pupil.mat']);
+    opt.xlim = [freqLimAllen(1) 2];
+    opt.ylim = [-pi/6 2*pi];
+    opt.legendLoc = 'SouthEast';
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'LGN','V1','V2','CA','DG'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles'], opt);
+    meanPhaseProfilesSummary5({'awake'}, dataRegular.areas, {'Th','VIS','Hp'}, dataRegular.areaFreqFullInterpIndividual, FOI,...
+      dataRegular.areaPhaseFullInterpIndividual, [outputDir '\area2pupil_comparisons_allensdk_negative\units\phaseDiffProfiles'], opt);
+  end
+end
+%close all

@@ -1,5 +1,3 @@
-% Commonly used data analysis parameters
-
 % input/output
 uolSourceDirNeuronexus = 'F:\infraslow-dynamics\03_data\001_uol_neuronexus_exp_raw_derived';
 uolSourceDirNeuropixels = 'F:\infraslow-dynamics\03_data\002_uol_neuropixels_exp_raw_derived';
@@ -7,7 +5,8 @@ allensdkSourceDir = 'F:\infraslow-dynamics\03_data\003_allen_raw_derived';
 iblSourceDir = 'C:\Users\44079\data_repositories\ibl-eightprobes';
 dataDir = 'F:\infraslow-dynamics\04_data_analysis';
 dataDir_local = 'D:\infraslow-dynamics\04_data_analysis';
-outputDir = 'D:\infraslow-dynamics\04_data_analysis\006_analysis_results';
+%outputDir = 'D:\infraslow-dynamics\04_data_analysis\006_analysis_results';
+outputDir = 'C:\Users\m329786\code_repositories\mouse-analysis\output';
 paDir = 'area_properties';
 paDir_positive = 'area_properties_positive';
 paDir_negative = 'area_properties_negative';

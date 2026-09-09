@@ -76,7 +76,6 @@ fH = figProperties('Violin plot for units', 'normalized', [0, .005, .97, .90], '
 violins = violinplot(violinVectors, areas);
 
 for iArea = 1:numel(areas)
-  
   if contains(areas{iArea},'Pos') || contains(areas{iArea},'Neg')
     areasShort{iArea} = strrep(areas{iArea}, 'Pos', '');
     areasShort{iArea} = strrep(areasShort{iArea}, 'Neg', '');
@@ -124,34 +123,43 @@ for iArea = 1:numel(areas)
     continue
   end
   rightSideY = violins(iArea).ViolinPlot.Vertices(1:sideSizeY,2);
-  interpRightSideY = sort([rightSideY; dataMean(iArea)+dataCI95(:,iArea)], 'ascend');
   leftSideY = violins(iArea).ViolinPlot.Vertices(sideSizeY+1:end,2);
-  interpLeftSideY = sort([leftSideY; dataMean(iArea)+dataCI95(:,iArea)], 'descend');
   
   sideSizeX = round(size(violins(iArea).ViolinPlot.Vertices,1)/2);
   if sideSizeX < 2
     continue
   end
   rightSideX = violins(iArea).ViolinPlot.Vertices(1:sideSizeX,1);
-  interpRightSideX = interp1(rightSideY, rightSideX, interpRightSideY);
   leftSideX = violins(iArea).ViolinPlot.Vertices(sideSizeX+1:end,1);
-  interpLeftSideX = interp1(leftSideY, leftSideX, interpLeftSideY);
-  
-  lowerLimit1 = interpLeftSideX(interpLeftSideY == dataMean(iArea)+dataCI95(1,iArea));
-  lowerLimit2 = interpRightSideX(interpRightSideY == dataMean(iArea)+dataCI95(1,iArea));
-  upperLimit1 = interpLeftSideX(interpLeftSideY == dataMean(iArea)+dataCI95(2,iArea));
-  upperLimit2 = interpRightSideX(interpRightSideY == dataMean(iArea)+dataCI95(2,iArea));
+
+  ciLowerY = dataMean(iArea)+dataCI95(1,iArea);
+  ciUpperY = dataMean(iArea)+dataCI95(2,iArea);
+
+  % The violin outline is clipped to the underlying data's own [min max]
+  % range (see Violin.m), which can be narrower than the CI for a small-n
+  % or high-variance area. Querying interp1 outside that range returns
+  % NaN, which silently drops the CI line at that bound. Clamp the query
+  % to the violin's plotted Y range so the line is always drawn instead.
+  yRangeMin = min(rightSideY);
+  yRangeMax = max(rightSideY);
+  ciLowerYQuery = min(max(ciLowerY, yRangeMin), yRangeMax);
+  ciUpperYQuery = min(max(ciUpperY, yRangeMin), yRangeMax);
+
+  lowerLimit1 = interp1(leftSideY, leftSideX, ciLowerYQuery);
+  lowerLimit2 = interp1(rightSideY, rightSideX, ciLowerYQuery);
+  upperLimit1 = interp1(leftSideY, leftSideX, ciUpperYQuery);
+  upperLimit2 = interp1(rightSideY, rightSideX, ciUpperYQuery);
   
   if ~isempty(options.colours)
-    plot([lowerLimit1 lowerLimit2], [dataMean(iArea)+dataCI95(1) dataMean(iArea)+dataCI95(1)], '--', 'Color',options.colours{iArea});
-    plot([upperLimit1 upperLimit2], [dataMean(iArea)+dataCI95(2) dataMean(iArea)+dataCI95(2)], '--', 'Color',options.colours{iArea});
+    plot([lowerLimit1 lowerLimit2], [ciLowerY ciLowerY], '--', 'Color',options.colours{iArea});
+    plot([upperLimit1 upperLimit2], [ciUpperY ciUpperY], '--', 'Color',options.colours{iArea});
   else
     try
-      plot([lowerLimit1 lowerLimit2], [dataMean(iArea)+dataCI95(1) dataMean(iArea)+dataCI95(1)], '--', 'Color',areaColours2(areasShort{iArea}));
-      plot([upperLimit1 upperLimit2], [dataMean(iArea)+dataCI95(2) dataMean(iArea)+dataCI95(2)], '--', 'Color',areaColours2(areasShort{iArea}));
+      plot([lowerLimit1 lowerLimit2], [ciLowerY ciLowerY], '--', 'Color',areaColours2(areasShort{iArea}));
+      plot([upperLimit1 upperLimit2], [ciUpperY ciUpperY], '--', 'Color',areaColours2(areasShort{iArea}));
     catch
-      plot([lowerLimit1 lowerLimit2], [dataMean(iArea)+dataCI95(1) dataMean(iArea)+dataCI95(1)], '--', 'Color',matlabColours(iArea));
-      plot([upperLimit1 upperLimit2], [dataMean(iArea)+dataCI95(2) dataMean(iArea)+dataCI95(2)], '--', 'Color',matlabColours(iArea));
+      plot([lowerLimit1 lowerLimit2], [ciLowerY ciLowerY], '--', 'Color',matlabColours(iArea));
+      plot([upperLimit1 upperLimit2], [ciUpperY ciUpperY], '--', 'Color',matlabColours(iArea));
     end
   end
 end
