@@ -37,6 +37,10 @@ function [h, stats, options] = histPlotFR(edges, data, options)
 %          lineWidths - a vector with line widths. Default is 2.
 %          displayMeans - true (default) or false for marking means.
 %          displayVars - true or false (default) for marking variances.
+%          centre - 'mean' (default) or 'median' (2026-11-08). With 'median'
+%            the markers show the median with its distribution-free 95%
+%            confidence interval (binomial order statistics) and the spread
+%            bars show the interquartile range instead of the variance.
 %          pdf - true or false (default) for drawing a probability density
 %                function instead of histogram counts.
 %          
@@ -118,6 +122,9 @@ if nargin < 3 || ~isfield(options, 'displayVars') || isempty(options.displayVars
 end
 if nargin < 3 || ~isfield(options, 'pdf') || isempty(options.pdf)
   options.pdf = false;
+end
+if nargin < 3 || ~isfield(options, 'centre') || isempty(options.centre)
+  options.centre = 'mean';
 end
 
 
@@ -208,6 +215,17 @@ for col = 1:nCol
   end
 end
 
+% Median instead of mean (options.centre = 'median')
+if strcmpi(options.centre, 'median')
+  for col = 1:nCol
+    if iscell(data), x = data{col}; else, x = data(:,col); end
+    x = sort(x(~isnan(x))); n = numel(x);
+    dataMean(col) = median(x);
+    j = max(1, floor(n/2 - 1.96*sqrt(n)/2)); k = min(n, ceil(n/2 + 1 + 1.96*sqrt(n)/2));
+    dataCI95(:,col) = [x(j) - dataMean(col); x(k) - dataMean(col)];
+  end
+end
+
 % Mean markers
 if options.displayMeans
   if isempty(options.markerVPos)
@@ -254,6 +272,13 @@ if options.displayVars
       lineColour = matlabColours(col);
     else
       lineColour = options.colours(col,:);
+    end
+    if strcmpi(options.centre, 'median')
+      if iscell(data), x = data{col}; else, x = data(:,col); end
+      q = prctile(x(~isnan(x)), [25 75]);
+      plot(q, [0.2*max(max(bars)) 0.2*max(max(bars))]-0.02*max(max(bars))*(col-1),...
+        'Color',lineColour, 'LineWidth',2, 'LineStyle','-')
+      continue
     end
     vars(col) = var(data(:,col), 'omitnan');
     plot([dataMean(col)-vars(col)/2 dataMean(col)+vars(col)/2],...
